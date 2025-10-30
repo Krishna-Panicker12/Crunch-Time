@@ -267,3 +267,11 @@ export async function mergeQBRSeason(season) {
 
   mergedSeason.add(season);
 }
+
+export async function loadAllData(season){
+    await loadPlayers();
+    await loadWeekly(season);
+    await loadSeason(season);
+    await mergeQbrWeekly(season);
+    await mergeQBRSeason(season);
+}
