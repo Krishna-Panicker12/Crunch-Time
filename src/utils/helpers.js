@@ -1,4 +1,4 @@
-import { weeklyIndexByPlayerSeason, seasonTotalsByPlayer } from '../data/statsIndexes.js';
+import { weeklyIndexByPlayerSeason, seasonTotalsByPlayer } from '../api/loadCSV.js';
 
 // Helper function to create uniform keys to access players' stats
 export const makeKey = (gsis_id, season) => `${gsis_id}|${Number(season)}`;
