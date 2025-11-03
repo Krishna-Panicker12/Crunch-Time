@@ -4,6 +4,8 @@ import NavBar from "./components/NavBar"
 import Compare from "./pages/Compare.jsx"
 import PickEm from "./pages/PickEm"
 import Profile from "./pages/Profile"
+import { useEffect } from "react"
+import { loadAllData } from "./api/loadCSV.js"
 
 
 
@@ -11,6 +13,9 @@ import Profile from "./pages/Profile"
 
 
 function App() {
+  useEffect(() => {
+    loadAllData(2025)
+  }, []);
   return (
     <>
       <NavBar/>
