@@ -1,227 +1,155 @@
 import React, { useMemo, useState } from "react";
 import { PlayerCard } from "../components/PlayerCard";
 import { PlayerPicker } from "../components/PlayerPicker";
-import { loadPlayers, loadWeekly } from "../api/loadCSV";
+import { getSeasonTotals, getWeeklyArray, makeKey } from "../utils/helpers";
+import { playersById, weeklyIndexByPlayerSeason } from "../api/loadCSV";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { STAT_DISPLAY_NAMES, BETTER_DIRECTION } from '../utils/statsMapping';
 
-/**
- * Minimal mock data — replace later with your API results.
- * Each player should include: id, name, team, position, headshot(optional), and stats object.
- */
+const CURRENT_YEAR = 2025;
 
+// Utility: conditional classNames
+const cx = (...xs) => xs.filter(Boolean).join(" ");
 
-
-loadPlayers()
-
-const MOCK_PLAYERS = [
-  {
-    id: "qb-allen",
-    name: "Josh Allen",
-    team: "BUF",
-    position: "QB",
-    headshot: "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/servs1fpsynfxep4rz2z",
-    jerseyNum: 17,
-    height: "6'5",
-    weight: 237,
-    college: "Wyoming",
-    birthDate: "21/05/1996",
-    stats: {
-      "Pass Yds": 4306,
-      "Pass TD": 35,
-      "INT": 16,
-      "Rush Yds": 524,
-      "Rush TD": 9,
-      "Comp%": 66.5,
-      "Sacks Taken": 24,
-      "EPA/Play": 0.19,     // placeholder numeric
-      "Success%": 48.2       // placeholder numeric
-    },
-  },
-  {
-    id: "qb-mahomes",
-    name: "Patrick Mahomes",
-    team: "KC",
-    position: "QB",
-    jerseyNum: 15,
-    height: "6'3",
-    weight: 230,
-    college: "Texas Tech",
-    birthDate: "17/09/1995",
-    headshot: "https://a.espncdn.com/i/headshots/nfl/players/full/3139477.png",
-    stats: {
-      "Pass Yds": 4525,
-      "Pass TD": 33,
-      "INT": 12,
-      "Rush Yds": 389,
-      "Rush TD": 2,
-      "Comp%": 67.2,
-      "Sacks Taken": 27,
-      "EPA/Play": 0.21,
-      "Success%": 49.8
-    },
-  },
-  {
-    id: "wr-jefferson",
-    name: "Justin Jefferson",
-    team: "MIN",
-    position: "WR",
-    jerseyNum: 18,
-    height: "6'1",
-    weight: 202,
-    college: "LSU",
-    birthDate: "06/06/1999",
-    headshot: "https://a.espncdn.com/i/headshots/nfl/players/full/4262921.png",
-    stats: {
-      "Rec": 103,
-      "Targets": 158,
-      "Rec Yds": 1552,
-      "Rec TD": 9,
-      "YPRR": 2.7,          // yards per route run
-      "Drop%": 3.5,
-      "EPA/Target": 0.35,
-      "Success%": 54.1
-    },
-  },
-  {
-    id: "wr-chase",
-    name: "Ja'Marr Chase",
-    team: "CIN",
-    position: "WR",
-    jerseyNum: 1,
-    height: "6'0",
-    weight: 201,
-    college: "LSU",
-    birthDate: "08/03/2000",
-    headshot: "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/qya3dtjb5kgofcuj2tuw",
-    stats: {
-      "Rec": 98,
-      "Targets": 156,
-      "Rec Yds": 1455,
-      "Rec TD": 11,
-      "YPRR": 2.5,
-      "Drop%": 5.1,
-      "EPA/Target": 0.31,
-      "Success%": 52.0
-    },
-  },
-];
-
-/** For each metric, define whether higher is better. If a key is missing, default = "higher is better". */
-const BETTER_DIRECTION = {
-  "INT": "lower",
-  "Sacks Taken": "lower",
-  "Drop%": "lower",
+// Utility: consistent value format
+const fmt = (v) => {
+  if (v === null || v === undefined || isNaN(v)) return 0;
+  return typeof v === "number" ? 
+    (Number.isInteger(v) ? v : Number(v.toFixed(2))) 
+    : v;
 };
 
-/** Lightweight utility */
-const classNames = (...xs) => xs.filter(Boolean).join(" ");
-
-// Helper to format values
-function formatVal(val) {
-  if (typeof val === "number") {
-    if (Number.isInteger(val)) return val;
-    return val.toFixed(2);
-  }
-  return val;
-}
-
 export default function Compare() {
-  // UI state
+  /** ---------- STATE ---------- */
   const [position, setPosition] = useState("");
-  const [searchA, setSearchA] = useState("");
-  const [searchB, setSearchB] = useState("");
   const [playerAId, setPlayerAId] = useState("");
   const [playerBId, setPlayerBId] = useState("");
+  const [searchA, setSearchA] = useState("");
+  const [searchB, setSearchB] = useState("");
+  const [selectedStat, setSelectedStat] = useState("");
 
-  // Positions available from data
+  /** ---------- DATA ---------- */
+  const MOCK_PLAYERS = [...playersById.values()];
+
   const positions = useMemo(
-    () => Array.from(new Set(MOCK_PLAYERS.map(p => p.position))).sort(),
-    []
+    () => Array.from(new Set(MOCK_PLAYERS.map((p) => p.position))).sort(),
+    [MOCK_PLAYERS]
   );
 
-  // Filter players by selected position
   const pool = useMemo(
-    () => MOCK_PLAYERS.filter(p => (position ? p.position === position : true)),
-    [position]
+    () => MOCK_PLAYERS.filter((p) => (position ? p.position === position : true)),
+    [MOCK_PLAYERS, position]
   );
 
   const filteredA = useMemo(
-    () => pool.filter(p => p.name.toLowerCase().includes(searchA.toLowerCase())),
+    () => pool.filter(p =>
+      (p.display_name || "").toLowerCase().includes(searchA.toLowerCase())
+    ),
     [pool, searchA]
   );
+
   const filteredB = useMemo(
-    () => pool.filter(p => p.name.toLowerCase().includes(searchB.toLowerCase())),
+    () => pool.filter(p =>
+      (p.display_name || "").toLowerCase().includes(searchB.toLowerCase())
+    ),
     [pool, searchB]
   );
 
-  const playerA = useMemo(() => pool.find(p => p.id === playerAId) || null, [pool, playerAId]);
-  const playerB = useMemo(() => pool.find(p => p.id === playerBId) || null, [pool, playerBId]);
+  const playerA = pool.find((p) => p.id === playerAId) || null;
+  const playerB = pool.find((p) => p.id === playerBId) || null;
 
-  // Collect comparable stat keys (intersection) to keep the table tidy
+  /** ---------- COMPARISON LOGIC ---------- */
+  // Update stats access to handle missing data
   const statKeys = useMemo(() => {
     if (!playerA || !playerB) return [];
-    const aKeys = Object.keys(playerA.stats);
-    const bKeys = Object.keys(playerB.stats);
-    return aKeys.filter(k => bKeys.includes(k));
+    const aStats = getSeasonTotals(playerA.id, CURRENT_YEAR) || {};
+    const bStats = getSeasonTotals(playerB.id, CURRENT_YEAR) || {};
+    const aKeys = Object.keys(aStats);
+    const bKeys = Object.keys(bStats);
+    return aKeys.filter((k) => bKeys.includes(k));
   }, [playerA, playerB]);
 
-  // Simple comparison helpers
-  const compareValues = (k, aVal, bVal) => {
+  const compareValues = (k, a, b) => {
     const dir = BETTER_DIRECTION[k] || "higher";
-    if (aVal == null || bVal == null) return 0;
-    if (dir === "higher") return aVal === bVal ? 0 : aVal > bVal ? 1 : -1;
-    return aVal === bVal ? 0 : aVal < bVal ? 1 : -1;
+    if (a == null || b == null) return 0;
+    // Convert to numbers for comparison
+    const numA = Number(a);
+    const numB = Number(b);
+    if (isNaN(numA) || isNaN(numB)) return 0;
+    if (dir === "higher") return numA > numB ? 1 : numA < numB ? -1 : 0;
+    return numA < numB ? 1 : numA > numB ? -1 : 0;
   };
 
+  // Update winner calculation to use season totals
   const winner = useMemo(() => {
     if (!playerA || !playerB) return null;
+    const aStats = getSeasonTotals(playerA.id, CURRENT_YEAR) || {};
+    const bStats = getSeasonTotals(playerB.id, CURRENT_YEAR) || {};
     let scoreA = 0, scoreB = 0;
-    statKeys.forEach(k => {
-      const cmp = compareValues(k, playerA.stats[k], playerB.stats[k]);
+    statKeys.forEach((k) => {
+      const cmp = compareValues(k, aStats[k], bStats[k]);
       if (cmp > 0) scoreA++;
       else if (cmp < 0) scoreB++;
     });
     if (scoreA === scoreB) return "Tie";
-    return scoreA > scoreB ? playerA.name : playerB.name;
+    return scoreA > scoreB ? playerA.display_name : playerB.display_name;
   }, [playerA, playerB, statKeys]);
 
-  // Tiny rule-based blurb (non-AI): focuses on the top 2 deltas
-  const summaryBlurb = useMemo(() => {
-    if (!playerA || !playerB) return "";
-    if (winner === "Tie") return "On balance, it’s a toss-up based on the selected metrics.";
-    const diffs = statKeys.map(k => {
-      const a = playerA.stats[k];
-      const b = playerB.stats[k];
-      const dir = BETTER_DIRECTION[k] || "higher";
-      // normalized edge: positive means playerA edge, negative means playerB edge
-      let edge = 0;
-      if (a != null && b != null) {
-        const denom = Math.abs(a) + Math.abs(b) || 1;
-        if (dir === "higher") edge = (a - b) / denom;
-        else edge = (b - a) / denom;
-      }
-      return { k, edge, a, b };
-    }).sort((x, y) => Math.abs(y.edge) - Math.abs(x.edge));
+  /** ---------- CHART DATA ---------- */
+  const aTotals = playerA ? getSeasonTotals(playerA.id, CURRENT_YEAR) : {};
+  const bTotals = playerB ? getSeasonTotals(playerB.id, CURRENT_YEAR) : {};
 
-    const top = diffs.slice(0, 2).filter(d => Math.abs(d.edge) > 0);
-    const who = winner === playerA?.name ? playerA : playerB;
-    const lines = top.map(d => {
-      const leader = compareValues(d.k, playerA.stats[d.k], playerB.stats[d.k]) > 0 ? playerA : playerB;
-      return `${leader.name} leads in ${d.k} (${playerA.stats[d.k]} vs ${playerB.stats[d.k]}).`;
-    });
 
-    return `${who.name} gets the edge overall. ${lines.join(" ")}`.trim();
-  }, [playerA, playerB, statKeys, winner]);
+  // Merge weeks for joint chart
+  const mergedWeeks = useMemo(() => {
+    if (!selectedStat || !playerA || !playerB) return [];
+    
+    const keyA = makeKey(playerA.id, CURRENT_YEAR);
+    const keyB = makeKey(playerB.id, CURRENT_YEAR);
+    
+    const weeksA = weeklyIndexByPlayerSeason.get(keyA) || new Map();
+    const weeksB = weeklyIndexByPlayerSeason.get(keyB) || new Map();
+    
+    const allWeeks = new Set([
+      ...Array.from(weeksA.keys()),
+      ...Array.from(weeksB.keys())
+    ]);
+    
+    return Array.from(allWeeks)
+      .sort((a, b) => a - b)
+      .map(week => {
+        const aStats = weeksA.get(week) || {};
+        const bStats = weeksB.get(week) || {};
+        
+        return {
+          week,
+          [playerA.display_name]: fmt(aStats[selectedStat]),
+          [playerB.display_name]: fmt(bStats[selectedStat])
+        };
+      });
+  }, [weeklyIndexByPlayerSeason, playerA, playerB, selectedStat]);
+
+  // Get available stats for chart selection
+  const availableStats = useMemo(() => {
+    if (!playerA || !playerB) return [];
+    return statKeys.map(key => ({
+      value: key,
+      label: STAT_DISPLAY_NAMES[key] || key
+    }));
+  }, [statKeys]);
 
   const resetPlayers = () => {
     setPlayerAId("");
     setPlayerBId("");
   };
 
+  /** ---------- RENDER ---------- */
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
+        {/* Header */}
         <header className="flex items-center justify-between">
-          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">Compare Players</h1>
+          <h1 className="text-3xl font-semibold">Compare Players</h1>
           <button
             onClick={resetPlayers}
             className="px-3 py-2 rounded-xl bg-slate-700/60 hover:bg-slate-700 transition"
@@ -230,27 +158,28 @@ export default function Compare() {
           </button>
         </header>
 
-        {/* Position selector (locks both sides) */}
+        {/* Position Selector */}
         <section className="backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-4">
           <label className="block text-sm mb-2">Position</label>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <select
-              value={position}
-              onChange={(e) => { setPosition(e.target.value); setPlayerAId(""); setPlayerBId(""); }}
-              className="w-full sm:w-64 px-3 py-2 rounded-xl bg-slate-900/60 border border-white/10"
-            >
-              <option value="">All</option>
-              {positions.map(pos => <option key={pos} value={pos}>{pos}</option>)}
-            </select>
-            {position && (
-              <div className="text-xs text-slate-300 self-center">
-                Only {position}s will be shown for both selectors.
-              </div>
-            )}
-          </div>
+          <select
+            value={position}
+            onChange={(e) => {
+              setPosition(e.target.value);
+              setPlayerAId("");
+              setPlayerBId("");
+            }}
+            className="w-full sm:w-64 px-3 py-2 rounded-xl bg-slate-900/60 border border-white/10"
+          >
+            <option value="">All</option>
+            {positions.map((pos) => (
+              <option key={pos} value={pos}>
+                {pos}
+              </option>
+            ))}
+          </select>
         </section>
 
-        {/* Pickers */}
+        {/* Player Pickers */}
         <section className="grid md:grid-cols-2 gap-4">
           <PlayerPicker
             title="Player A"
@@ -271,62 +200,102 @@ export default function Compare() {
         </section>
 
         {/* Validation */}
-        {(playerA && playerB && playerA.position !== playerB.position) && (
+        {playerA && playerB && playerA.position !== playerB.position && (
           <p className="text-rose-300 text-sm">
-            Please pick players from the same position to compare.
+            Please pick players from the same position.
           </p>
         )}
 
-        {/* Result / Table */}
-        {(playerA && playerB && playerA.position === playerB.position) && (
+        {/* Result */}
+        {playerA && playerB && playerA.position === playerB.position && (
           <section className="backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-white/10">
-              <h2 className="text-lg font-medium">Head-to-Head</h2>
-              <span className="text-sm text-slate-300">
-                Position: {playerA.position}
-              </span>
-            </div>
-
-            {/* Player header cards */}
-            <div className="grid md:grid-cols-2 gap-4 p-4">
+            {/* Player headers */}
+            <div className="grid md:grid-cols-2 gap-4 p-4 border-b border-white/10">
               <PlayerCard player={playerA} />
               <PlayerCard player={playerB} />
             </div>
+
+            {/* Stats selector for chart - Added padding and margin */}
+            <div className="px-4 pb-4 pt-2">
+              <select
+                value={selectedStat}
+                onChange={(e) => setSelectedStat(e.target.value)}
+                className="w-full md:w-auto px-3 py-2 rounded-xl bg-slate-900/60 border border-white/10"
+              >
+                <option value="">Select stat to chart</option>
+                {availableStats.map(({value, label}) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Chart container with fixed dimensions */}
+            {selectedStat && (
+              <div className="px-4 pb-8">
+                <div style={{ width: '100%', height: 400 }}>
+                  <ResponsiveContainer>
+                    <LineChart data={mergedWeeks}>
+                      <XAxis 
+                        dataKey="week"
+                        type="number"
+                        domain={[1, 'dataMax']}
+                        tickCount={17}  // For weeks 1-17
+                        interval={0}    // Force show all ticks
+                        allowDecimals={false}
+                      />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey={playerA.display_name}
+                        stroke="#8884d8"
+                        strokeWidth={2}
+                        dot={true}
+                        name={`${playerA.display_name} ${STAT_DISPLAY_NAMES[selectedStat] || selectedStat}`}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey={playerB.display_name}
+                        stroke="#82ca9d"
+                        strokeWidth={2}
+                        dot={true}
+                        name={`${playerB.display_name} ${STAT_DISPLAY_NAMES[selectedStat] || selectedStat}`}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
 
             {/* Stats table */}
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-white/5">
                   <tr>
-                    <th className="text-left px-4 py-3">Metric</th>
-                    <th className="text-left px-4 py-3">{playerA.name}</th>
-                    <th className="text-left px-4 py-3">{playerB.name}</th>
+                    <th className="px-4 py-3 text-left">Metric</th>
+                    <th className="px-4 py-3 text-left">{playerA.display_name}</th>
+                    <th className="px-4 py-3 text-left">{playerB.display_name}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {statKeys.map((k) => {
-                    const aVal = playerA.stats[k];
-                    const bVal = playerB.stats[k];
-                    const cmp = compareValues(k, aVal, bVal);
+                    const a = fmt(aTotals[k]);
+                    const b = fmt(bTotals[k]);
+                    const cmp = compareValues(k, a, b);
                     return (
                       <tr key={k} className="border-t border-white/10">
-                        <td className="px-4 py-2 text-slate-300">{k}</td>
-                        <td className={classNames(
-                          "px-4 py-2",
-                          cmp > 0 ? "font-semibold text-emerald-300" : "",
-                          cmp === 0 ? "text-slate-200" : ""
-                        )}>
-                          {formatVal(aVal)}
+                        <td className="px-4 py-2 text-slate-300">
+                          {STAT_DISPLAY_NAMES[k] || k}
+                        </td>
+                        <td className={cx("px-4 py-2", cmp > 0 && "font-semibold text-emerald-300")}>
+                          {a}
                           <span className="ml-2 text-xs text-slate-400">
                             {BETTER_DIRECTION[k] === "lower" ? "↓ better" : "↑ better"}
                           </span>
                         </td>
-                        <td className={classNames(
-                          "px-4 py-2",
-                          cmp < 0 ? "font-semibold text-emerald-300" : "",
-                          cmp === 0 ? "text-slate-200" : ""
-                        )}>
-                          {formatVal(bVal)}
+                        <td className={cx("px-4 py-2", cmp < 0 && "font-semibold text-emerald-300")}>
+                          {b}
                         </td>
                       </tr>
                     );
@@ -335,17 +304,10 @@ export default function Compare() {
               </table>
             </div>
 
-            {/* Winner + blurb */}
-            <div className="p-4 border-t border-white/10">
-              <div className="text-base">
-                <span className="text-slate-300">Result: </span>
-                <span className="font-semibold">
-                  {winner || "—"}
-                </span>
-              </div>
-              {summaryBlurb && (
-                <p className="mt-2 text-slate-300 text-sm">{summaryBlurb}</p>
-              )}
+            {/* Winner */}
+            <div className="p-4 border-t border-white/10 text-base">
+              <span className="text-slate-300">Result: </span>
+              <span className="font-semibold">{winner || "—"}</span>
             </div>
           </section>
         )}
@@ -353,8 +315,3 @@ export default function Compare() {
     </div>
   );
 }
-
-
-
-
-

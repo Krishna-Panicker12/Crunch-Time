@@ -15,7 +15,7 @@ export const STAT_DISPLAY_NAMES = {
   cpoe: "CPOE",
   pacr: "PACR",
   qbr_total: "QBR",
-  qbr_epa_total: "QBR EPA Total",
+  qbr_epa_total: "EPA Total",
 
   // RB Stats
   carries: "Carries",
