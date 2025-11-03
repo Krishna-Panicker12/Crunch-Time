@@ -17,7 +17,7 @@ export function PlayerPicker({ title, search, onSearch, options, valueId, onChan
         <option value="">Select</option>
         {options.map(p => (
           <option key={p.id} value={p.id}>
-            {p.name} ({p.team})
+            {p.display_name} ({p.team})
           </option>
         ))}
       </select>
