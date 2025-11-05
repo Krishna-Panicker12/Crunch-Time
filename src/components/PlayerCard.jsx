@@ -2,6 +2,9 @@
 
 export function PlayerCard({ player }) {
   if (!player) return null;
+
+  let foot = Math.floor(player.height / 12);
+  let inch = player.height % 12;
   return (
     <div className="flex items-center gap-4 bg-slate-900/40 rounded-xl p-3">
       <img
@@ -16,7 +19,7 @@ export function PlayerCard({ player }) {
         </div>
         <div>
             <div className="text-slate-400 text-sm mt-1">
-                <div>Height: {player.height }</div>
+                <div>Height: {`${foot}'${inch}`}</div>
                 <div>Weight: {player.weight} lbs</div>
                 <div>College: {player.college}</div>
                 <div>Birth Date: {player.birthDate} </div>
