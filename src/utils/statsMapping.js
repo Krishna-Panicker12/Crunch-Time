@@ -1,4 +1,9 @@
 export const STAT_DISPLAY_NAMES = {
+  // Common Stats
+  crunch_time_grade: "Crunch Time Grade",
+  completions_pct: "Completion Percentage",
+  fantasy_points: "Fantasy Points",
+
   // QB Stats
   completions: "Completions",
   attempts: "Pass Attempts",
@@ -11,7 +16,6 @@ export const STAT_DISPLAY_NAMES = {
   rush_tds: "Rushing Touchdowns",
   rush_epa: "Rushing EPA",
   fumbles_lost: "Fumbles Lost",
-  fantasy_points: "Fantasy Points",
   cpoe: "CPOE",
   pacr: "PACR",
   qbr_total: "QBR",
