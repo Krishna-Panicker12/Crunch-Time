@@ -6,6 +6,8 @@ import PickEm from "./pages/PickEm"
 import Profile from "./pages/Profile"
 import { useEffect } from "react"
 import { loadAllData } from "./api/loadCSV.js"
+import LoginPage from "./pages/Login.jsx"
+import ProtectedRoute from "./components/ProtectedRoute.jsx"
 
 
 
@@ -21,10 +23,16 @@ function App() {
       <NavBar/>
       <main className="bg-purple-fade bg-cover bg-center ">
         <Routes>
-          <Route path="/" element = {<Home />} />
-          <Route path="/compare" element = {<Compare />}></Route>
-          <Route path="/pickem" element = {<PickEm />}></Route>
-          <Route path="/profile" element = {<Profile />}></Route>
+          {/* Public routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/compare" element={<Compare />} />
+          <Route path="/login" element={<LoginPage />} />
+
+          {/* Protected routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/pickem" element={<PickEm />} />
+            <Route path="/profile" element={<Profile />} />
+          </Route>
         </Routes>
       </main>
     </>
