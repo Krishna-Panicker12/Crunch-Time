@@ -1,6 +1,7 @@
 import Papa from "papaparse";
 import { PLAYERS_CSV_URL, WEEKLY_CSV_URL, SEASON_CSV_URL ,QUARTERBACK_WEEKLY_ESPN_CSV_URL, QUARTERBACK_SEASON_ESPN_CSV_URL } from "./constants.js";
-import { normalizePlayerRow, normalizePlayerStats } from "./normalize.js";
+import { normalizePlayerStats } from "./normalize.js";
+import { fetchCsvViaProxy } from "./proxyFetch.js";
 
 // In-memory caches
 const playersById = new Map();
@@ -22,17 +23,19 @@ function makeKey(id,season){
 }
 
 // This function loads and parses a CSV file from a URL using PapaParse
-export function loadCSV(url) {
-  return new Promise((resolve, reject) => {
-    Papa.parse(url, {
-      download: true,
-      header: true,
-      dynamicTyping: true,
-      skipEmptyLines: true,
-      complete: (res) => resolve(res.data),
-      error: reject,
-    });
-  });
+export async function loadCSV(url) {
+    try{
+        const csvText = await fetchCsvViaProxy(url);
+        const result = Papa.parse(csvText,{
+            header: true,
+            dynamicTyping: true,
+            skipEmptyLines: true,
+        });
+        return result.data;
+    } catch (error){
+        console.error(`Error loading CSV from ${url}:`, error);
+        throw error;
+    }
 }
 
 // This function reads and assigns basic player background information
