@@ -1,0 +1,31 @@
+{
+  "player": {
+    "id": "wr_diggs",
+    "displayName": "Stefon Diggs",
+    "position": "TE",
+    "height": 72,
+    "weight": 200,
+    "birthDate": "1993-11-29",
+    "headShot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/cemcexmscsarpvwhafln",
+    "team": "BUF",
+    "num": 8,
+    "college": "Maryland",
+    "season": 2025,
+    "stats": {
+      "gamesPlayed": 9,
+      "receptions": 85,
+      "targets": 120,
+      "recYards": 1100,
+      "recTds": 8,
+      "recYac": 450,
+      "fantasyPoints": 159.0,
+      "targetShare": 0.28,
+      "airYardsShare": 0.32,
+      "wopr": 0.18,
+      "racr": 1.15,
+      "recEpa": 0.45,
+      "tdRate": 0.094,
+      "crunchTimeGrade": 85.5
+    }
+  }
+}

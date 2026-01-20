@@ -19,7 +19,6 @@ export function normalizePlayerRow(row) {
 }
 
 export function normalizePlayerStats(row) {
-  if (row['season_type'] !== 'REG') return null;
   const pos = row['position_group'];
 
   if (pos === 'QB') {

@@ -199,7 +199,7 @@ export default function Compare() {
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <header className="flex items-center justify-between">
-          <h1 className="text-3xl font-semibold">Compare Players</h1>
+          <h1 className="text-3xl font-semibold text-center">Compare Players</h1>
           <button
             onClick={resetPlayers}
             className="px-3 py-2 rounded-xl bg-slate-700/60 hover:bg-slate-700 transition">

@@ -81,33 +81,6 @@ export async function loadPlayers(){
             playersByPosition.set(position, arr);
         }
     });
-    console.log(`Loaded ${playersById.size} players.`);
-    console.log(`Loaded Drake Maye: ${JSON.stringify(playersById.get('00-0039851'))}`);
-    console.log(`Drake Maye by ESPN ID: ${JSON.stringify(playersById.get(idByEspnId.get(4431452)))}`);
-    console.log(`Total QBs: ${playersByPosition.get('QB').length}`);
-    const keyyy = makeKey('00-0039851',2025);
-    console.log(`Drake Maye Key Test: ${keyyy}`);
-
-    console.log("--------------------------------------- NOW TESTING WEEKLY LOADER ---------------------------------------")
-
-    const result = await loadWeekly(2025)
-    console.log(`Testing loadWeekly function. Loaded ${weeklyIndexByPlayerSeason.size}`)
-    console.log(`TESTING DRAKE MAYE'S STATS:: ${JSON.stringify(weeklyIndexByPlayerSeason.get(keyyy).get(1))}`)
-
-
-    console.log("--------------------------------------- NOW TESTING SEASON LOADER ---------------------------------------")
-    const seasonResult = await loadSeason(2025)
-    console.log(`Testing loadSeason function. Loaded ${seasonTotalsByPlayer.size}`)
-    console.log(`TESTING DRAKE MAYE'S SEASON STATS:: ${JSON.stringify(seasonTotalsByPlayer.get('00-0039851|2025'))}`)
-
-    console.log("--------------------------------------- NOW TESTING QBR MERGE ---------------------------------------")
-    const qbrWeeklyResult = await mergeQbrWeekly(2025)
-    console.log(`Testing mergeQbrWeekly function.`)
-    console.log(`TESTING DRAKE MAYE'S STATS POST-QBR MERGE:: ${JSON.stringify(weeklyIndexByPlayerSeason.get(keyyy).get(8))}`)
-    const qbrSeasonResult = await mergeQBRSeason(2025)
-    console.log(`Testing mergeQBRSeason function.`)
-    console.log(`TESTING DRAKE MAYE'S SEASON STATS POST-QBR MERGE:: ${JSON.stringify(seasonTotalsByPlayer.get(keyyy))}`)
-
 }
 
 // This function looks through weekly stats
@@ -138,7 +111,6 @@ export async function loadWeekly(season){
         }
         weekMap.set(week, stats);                          // value = stats only
     });
-
     loadedSeasons.add(Number(season));
 }
 
