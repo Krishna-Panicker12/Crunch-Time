@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { Link } from "react-router-dom"
 
 function Home() {
     return (
@@ -21,7 +21,7 @@ function Home() {
                     >
                         <p
                             className="
-                                text-purple-200
+                                text-purple-400
                                 font-bold
                                 text-lg sm:text-xl md:text-2xl
                                 leading-snug md:leading-snug
@@ -32,7 +32,7 @@ function Home() {
 
                         <h1
                             className="
-                                text-red-200
+                               bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent
                                 font-bold
                                 mt-2
                                 text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl
@@ -49,14 +49,15 @@ function Home() {
                                 mt-3 md:mt-4
                                 text-base sm:text-xl md:text-2xl
                                 leading-relaxed md:leading-relaxed
-                                text-gray-300
+                                text-white
                             "
                         >
                             The ultimate player comparison tool for football fanatics. Compare players using stats to see who truly stands out on the field.
                         </p>
 
                         <div className="mt-6 md:mt-10">
-                            <button
+                            <Link
+                                to="/compare"
                                 className="
                                     inline-flex items-center justify-center
                                     rounded-full
@@ -67,12 +68,12 @@ function Home() {
                                     text-base sm:text-lg md:text-xl
                                     transition
                                     shadow-md
-                                    bg-gradient-to-r from-purple-600 via-blue-500 to-red-500
+                                    bg-gradient-to-r from-purple-600 via-blue-500
                                     animate-gradient-x
                                     hover:scale-105 hover:shadow-lg active:scale-95"
                             >
                                 Get Started
-                            </button>
+                            </Link>
                         </div>
                     </div>
                 </section>

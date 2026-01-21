@@ -23,7 +23,7 @@ function NavBar() {
         {/* Brand Name */}
         <Link
           to="/"
-          className="text-2xl font-bold text-red-200 hover:text-purple-400 transition"
+          className="text-2xl font-bold text-cyan-400 hover:text-purple-400 transition"
         >
           CRUNCH TIME
         </Link>

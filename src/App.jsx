@@ -21,7 +21,7 @@ function App() {
   return (
     <>
       <NavBar/>
-      <main className="bg-purple-fade bg-cover bg-center ">
+      <main className="bg-gradient-to-b from-gray-950 via-blue-950 to-gray-950">
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Home />} />

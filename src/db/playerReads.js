@@ -1,14 +1,14 @@
 import { supabase } from "./supabaseClient";
 
 // list players (for dropdowns/search)
-export async function listPlayers({ position = null, limit = 5000 } = {}) {
+export async function listPlayers({ position = null, limit = 100000 } = {}) {
   let q = supabase
     .from("players")
-    .select("id, display_name, position, team, headshot")
-    .order("display_name", { ascending: true })
-    .limit(limit);
+    .select("id, display_name, position, team, headshot, college, jersey_number, height, weight, birth_date");
 
   if (position && position !== "All") q = q.eq("position", position);
+
+  q = q.order("display_name", { ascending: true }).limit(limit);
 
   const { data, error } = await q;
   if (error) throw error;
