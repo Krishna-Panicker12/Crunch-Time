@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { PlayerCard } from "../components/PlayerCard";
 import { PlayerPicker } from "../components/PlayerPicker";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
@@ -7,6 +7,8 @@ import { StatTooltip } from "../components/StatTooltip";
 
 // NEW: Supabase reads
 import { listPlayers, getPlayerSeason, getPlayerWeeks } from "../db/playerReads";
+import { generateCompareExplanation } from "../archetypes/compareAiExplainer";
+import { calculateWinner } from "../archetypes/compareWinnerCalculator";
 
 const CURRENT_YEAR = 2025;
 const HIGHLIGHTED_STATS = new Set(["crunch_time_grade"]);
@@ -48,6 +50,12 @@ export default function Compare() {
   const [aLoading, setALoading] = useState(false);
   const [bLoading, setBLoading] = useState(false);
 
+  // AI explanation state
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiExplanation, setAiExplanation] = useState(null);
+  const aiReqIdRef = useRef(0);
+  const aiAbortRef = useRef(null);
+
   /** ---------- LOAD PLAYERS FROM SUPABASE ONCE ---------- */
   useEffect(() => {
     let alive = true;
@@ -58,8 +66,6 @@ export default function Compare() {
         // Load all players once; then filter locally (same behavior as old Maps)
         const data = await listPlayers({ position: "All", limit: 20000 });
       
-  console.log("Loaded players count:", data?.length);
-  console.log("Last few players:", data?.slice(-5));
   // Look for names like "Zach Wilson", "Zay Flowers", etc.
         if (!alive) return;
         setAllPlayers(data || []);
@@ -209,34 +215,95 @@ export default function Compare() {
     return numA < numB ? 1 : numA > numB ? -1 : 0;
   };
 
-  const winner = useMemo(() => {
-    if (!playerA || !playerB) return null;
-
-    const aGrade = Number(aTotals?.crunch_time_grade || 0);
-    const bGrade = Number(bTotals?.crunch_time_grade || 0);
-
-    if (Math.abs(aGrade - bGrade) >= 5) {
-      return aGrade > bGrade
-        ? `${playerA.display_name} (${aGrade}% CTG)`
-        : `${playerB.display_name} (${bGrade}% CTG)`;
-    }
-
-    let scoreA = 0,
-      scoreB = 0;
-
-    statKeys.forEach((k) => {
-      if (k === "crunch_time_grade") return;
-      const cmp = compareValues(k, aTotals[k], bTotals[k]);
-      if (cmp > 0) scoreA++;
-      else if (cmp < 0) scoreB++;
-    });
-
-    if (scoreA === scoreB) return `Tie (${aGrade}% vs ${bGrade}% CTG)`;
-
-    return scoreA > scoreB
-      ? `${playerA.display_name} (${aGrade}% CTG)`
-      : `${playerB.display_name} (${bGrade}% CTG)`;
+  const winnerData = useMemo(() => {
+    return calculateWinner(playerA, playerB, aTotals, bTotals, statKeys);
   }, [playerA, playerB, aTotals, bTotals, statKeys]);
+
+  const winner = winnerData ? 
+    (winnerData.isTie ? 
+      `Tie (${winnerData.aGrade}% vs ${winnerData.bGrade}% CTG)` : 
+      `${winnerData.winner.display_name} (${winnerData.winner === playerA ? winnerData.aGrade : winnerData.bGrade}% CTG)`) : 
+    null;
+
+  /** ---------- AI EXPLANATION ---------- */
+  /** ---------- AI EXPLANATION (race-condition safe) ---------- */
+useEffect(() => {
+  // If not ready, clear
+  if (
+    !winnerData || !winnerData.winner || !playerA || !playerB ||
+    !aTotals || !bTotals ||
+    Object.keys(aTotals).length === 0 || Object.keys(bTotals).length === 0
+  ) {
+    // cancel any in-flight request
+    if (aiAbortRef.current) aiAbortRef.current.abort();
+    setAiExplanation(null);
+    setAiLoading(false);
+    return;
+  }
+
+  // --- Create a "snapshot" so async can't read live-changing state ---
+  const snapshotA = {
+    playerName: playerA.display_name,
+    position: playerA.position,
+    stats: { ...aTotals },
+  };
+  const snapshotB = {
+    playerName: playerB.display_name,
+    position: playerB.position,
+    stats: { ...bTotals },
+  };
+
+  const winnerString = winnerData.isTie
+    ? `Tie (${winnerData.aGrade}% vs ${winnerData.bGrade}% CTG)`
+    : `${winnerData.winner.display_name} (${winnerData.winner === playerA ? winnerData.aGrade : winnerData.bGrade}% CTG)`;
+
+  const winnerReason = winnerData.reason;
+
+  // --- request ownership ---
+  const reqId = ++aiReqIdRef.current;
+
+  // --- cancel previous request ---
+  if (aiAbortRef.current) aiAbortRef.current.abort();
+  const controller = new AbortController();
+  aiAbortRef.current = controller;
+
+  setAiLoading(true);
+  setAiExplanation(null);
+
+  (async () => {
+    try {
+      const explanation = await generateCompareExplanation(
+        snapshotA,
+        snapshotB,
+        winnerString,
+        winnerReason,
+        true,
+        { signal: controller.signal } // <--- NEW (see file #2)
+      );
+
+      // Only the latest request can update the UI
+      if (reqId !== aiReqIdRef.current) return;
+
+      setAiExplanation(explanation);
+    } catch (e) {
+      // If aborted, ignore (this is expected)
+      if (e?.name === "AbortError") return;
+
+      console.warn("AI explanation failed:", e);
+
+      if (reqId !== aiReqIdRef.current) return;
+      setAiExplanation({ text: "Unable to generate explanation at this time.", source: "error" });
+    } finally {
+      // Only latest request can end loading state
+      if (reqId !== aiReqIdRef.current) return;
+      setAiLoading(false);
+    }
+  })();
+
+  // Cleanup abort on dependency change/unmount
+  return () => controller.abort();
+}, [winnerData, playerA, playerB, aTotals, bTotals]);
+
 
   /** ---------- CHART DATA ---------- */
   const mergedWeeks = useMemo(() => {
@@ -521,6 +588,23 @@ export default function Compare() {
               </div>
             )}
 
+            {/* AI Explanation */}
+            {winner && (
+              <div className="px-6 py-5 border-t border-white/10">
+                <h3 className="text-lg font-semibold text-white mb-4">Analysis</h3>
+                {aiLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mr-4"></div>
+                    <p className="text-slate-300">Generating AI analysis. This can take sometime, your patience is appreciated.</p>
+                  </div>
+                ) : aiExplanation ? (
+                  <p className="text-slate-300 text-sm">
+                    {aiExplanation.text}
+                  </p>
+                ) : null}
+              </div>
+            )}
+
             {/* Stats table */}
             <div className="overflow-x-auto">
               <div className="px-6 py-5 border-t border-white/10">
@@ -586,12 +670,6 @@ export default function Compare() {
                   })}
                 </tbody>
               </table>
-            </div>
-
-            {/* Winner */}
-            <div className="p-4 border-t border-white/10 text-base">
-              <span className="text-slate-300">Result: </span>
-              <span className="font-semibold">{winner || "—"}</span>
             </div>
           </section>
         )}

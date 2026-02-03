@@ -138,7 +138,7 @@ export function PlayerPicker({ title, search, onSearch, options, valueId, onChan
         }}
         onFocus={() => setIsOpen(true)}
         placeholder="Search player..."
-        className="w-full mb-4 px-4 py-3 rounded-xl bg-slate-900/80 border border-white/10 hover:border-white/20 focus:border-blue-500/50 focus:outline-none transition-all duration-300 backdrop-blur-sm"
+        className="w-full mb-4 px-4 py-3 rounded-xl bg-slate-900/80 border border-white/10 hover:border-white/20 focus:border-blue-500/50 focus:outline-none transition-all duration-300 backdrop-blur-sm text-white placeholder-slate-500"
       />
 
       {/* Selected player display */}

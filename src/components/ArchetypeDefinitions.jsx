@@ -19,6 +19,7 @@ import stethoscope from '../assets/stethoscope.png';
 import shield from '../assets/shield.png';
 import seamRipper from '../assets/seam-ripper.png';
 import puzzle from '../assets/puzzle.png';
+import { PlayerPicker } from './PlayerPicker';
 
 export const ArcheDefinitions = {
   QB: [
@@ -41,12 +42,6 @@ export const ArcheDefinitions = {
     icon: cowboy
     },
     {
-      name: "Game Manager",
-      description:
-        "A steady, reliable quarterback who focuses on consistency and efficiency. They avoid mistakes, manage the clock well, and keep drives alive without necessarily being spectacular.",
-    icon: clipboard
-    },
-    {
       name: "Game Changer (Alpha)",
       description:
         "An elite, transformative quarterback who dominates games with their talent. They have the ability to single-handedly change the outcome of contests through exceptional playmaking.",
@@ -61,22 +56,10 @@ export const ArcheDefinitions = {
     icon: horse
     },
     {
-      name: "Efficiency Rusher",
-      description:
-        "A running back who maximizes every carry, converting short yardage situations and maintaining positive yards per attempt. They excel at grinding out tough yards.",
-    icon:gear
-    },
-    {
       name: "Receiving Back",
       description:
         "A running back who is primarily a threat in the passing game. They have excellent route-running skills and can stretch the field as a receiver out of the backfield.",
     icon:baseballMitt
-    },
-    {
-      name: "Red-Zone Back",
-      description:
-        "A running back who specializes in scoring touchdowns in the red zone. They have great vision, patience, and finishing ability near the goal line.",
-    icon: punch
     },
     {
       name: "All Purpose Back",
@@ -147,26 +130,38 @@ export const ArcheDefinitions = {
 
 export function ArchetypeDefinitions({ specPosition }) {
   return (
-    <>
-      <div>
-        {specPosition && positions.includes(specPosition) ? (
-          <div className = "flex flex-col items-center mt-6 mb-10 p-1 space-y-1.5">
-            <h2 className="text-2xl font-bold mb-4 justify-center">{specPosition} Archetypes</h2>
-            <div className="grid grid-cols-4 gap-4">
-              {ArcheDefinitions[specPosition].map((arch) => (
-                <div key={arch.name} className="flex flex-col items-center text-center bg-white/10 border border-white/20 rounded-lg p-4 space-y-5 shadow-md hover:scale-105 hover:shadow-lg active:scale-95 hover:bg-white/20">
-                  <h3 className="text-xl font-semibold">{arch.name}</h3>
-                  <p>{arch.description}</p>
-                  <img className = "w-20 " src={arch.icon} alt = "Bro bro Bro"></img>
-                </div>
-              ))}
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100  font-bold p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
+        <header className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 md:mb-10">
+          <div>
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-1">
+              Find your player's archetype
+            </h1>
+            <p className="text-slate-400 text-sm md:text-base">Analyze player performance and match them to their archetype</p>
           </div>
-        ) : (
-            <p className="text-center">Select a posistion to view archetypes</p>
-        )}
+          <button
+            // This should be a link back to the pick'em page/playerhub
+            className="mt-4 md:mt-0 px-6 py-2.5 rounded-xl bg-gradient-to-r from-slate-700/60 to-slate-600/60 hover:from-slate-600/80 hover:to-slate-500/80 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all duration-300 font-medium text-sm"
+          >
+            Back to player hub
+          </button>
+        </header>
+
+        
+
       </div>
-    </>
+    </div>
+
   );
 }
 
+// Header 
+// Explanation of what happens on this page
+// Player picker jsx
+// Then it shows the report card
+// --> Player info at the top with name, team, position, photo
+// --> Archetype section with icon, name, description
+// --> Stats section with relevant stats based on position
+// --> Graphs and such with AI blurb explaning
+// -=> At the bottom it shows players that share the same archetype and are the most similar to the player that was chosen
+// At the bottom it shows archetype definitions with icons and descriptions

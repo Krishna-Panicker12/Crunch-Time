@@ -21,11 +21,15 @@ export async function getPlayerSeason(id, season) {
     .from("player_seasons")
     .select("season, stats")
     .eq("id", id)
-    .eq("season", season)
-    .single();
+    .eq("season", season);
 
-  if (error) throw error;
-  return data; // { season, stats }
+  // Return null if no data found, don't throw error
+  if (error) {
+    console.warn(`No season data for player ${id} in season ${season}:`, error.message);
+    return null;
+  }
+  
+  return data && data.length > 0 ? data[0] : null;
 }
 
 // weekly stats for a player

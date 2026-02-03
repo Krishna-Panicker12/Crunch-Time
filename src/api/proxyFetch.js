@@ -17,3 +17,9 @@ export async function fetchCsvViaProxy(url) {
 
   return res.text(); // CSV string
 }
+// NOTE TO SELF: Remember to add logos of team to the compare page when the player is selected. For otmmorow the goal is to finally host the website on vercel.
+// Make sure that everything functions in production
+// Hide all api keys and sensitive information
+// Test LLm functionality before deploying and it works in production
+// Make one md file that describes all the things happening
+// Leave comments

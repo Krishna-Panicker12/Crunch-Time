@@ -1,21 +1,8 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext"; // 👈 make sure path is correct
+import { Link } from "react-router-dom";
 
 function NavBar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { user, logout } = useAuth(); // 👈 access Firebase auth context
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate("/login");
-      setMenuOpen(false); // close mobile menu
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
-  };
 
   return (
     <>
@@ -36,32 +23,10 @@ function NavBar() {
             </Link>
           </li>
           <li>
-            <Link to="/pickem" className="hover:text-blue-400 transition">
-              Pick'em
+            <Link to="/archetype" className="hover:text-blue-400 transition">
+              Archetypes
             </Link>
           </li>
-          <li>
-            <Link to="/profile" className="hover:text-blue-400 transition">
-              Profile
-            </Link>
-          </li>
-
-          {/* 👇 Auth Section */}
-          {user ? (
-            <button
-              onClick={handleLogout}
-              className="bg-gray-800 px-3 py-1 rounded text-sm hover:bg-gray-700 transition"
-            >
-              Logout
-            </button>
-          ) : (
-            <Link
-              to="/login"
-              className="bg-blue-600 px-3 py-1 rounded text-sm hover:bg-blue-500 transition"
-            >
-              Login
-            </Link>
-          )}
         </ul>
 
         {/* Mobile Menu Button */}
@@ -102,40 +67,13 @@ function NavBar() {
             </li>
             <li>
               <Link
-                to="/pickem"
+                to="/archetype"
                 className="hover:text-blue-400 transition"
                 onClick={() => setMenuOpen(false)}
               >
-                Pick'em
+                Archetypes
               </Link>
             </li>
-            <li>
-              <Link
-                to="/profile"
-                className="hover:text-blue-400 transition"
-                onClick={() => setMenuOpen(false)}
-              >
-                Profile
-              </Link>
-            </li>
-
-            {/* 👇 Auth Section for mobile */}
-            {user ? (
-              <button
-                onClick={handleLogout}
-                className="bg-gray-800 px-3 py-1 rounded text-sm hover:bg-gray-700 transition"
-              >
-                Logout
-              </button>
-            ) : (
-              <Link
-                to="/login"
-                className="bg-blue-600 px-3 py-1 rounded text-sm hover:bg-blue-500 transition"
-                onClick={() => setMenuOpen(false)}
-              >
-                Login
-              </Link>
-            )}
           </ul>
         </div>
       )}
