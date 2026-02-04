@@ -32,48 +32,16 @@ import TEN from "../assets/tennessee-titans-logo-transparent.png";
 import WAS from "../assets/Washington-Commanders.png";
 
 export const teamLogoMap = {
-  ARI,
-  ATL,
-  BAL,
-  BUF,
-  CAR,
-  CHI,
-  CIN,
-  CLE,
-  DAL,
-  DEN,
-  DET,
-  GB,
-  HOU,
-  IND,
-  JAX,
-  KC,
-  LAC,
-  LAR,
-  MIA,
-  MIN,
-  NE,
-  NO,
-  NYG,
-  NYJ,
-  OAK,
-  PHI,
-  PIT,
-  SF,
-  SEA,
-  TB,
-  TEN,
-  WAS,
+  ARI, ATL, BAL, BUF, CAR, CHI, CIN, CLE, DAL, DEN, DET, GB, HOU, IND, JAX, KC,
+  LAC, LAR, MIA, MIN, NE, NO, NYG, NYJ, OAK, PHI, PIT, SF, SEA, TB, TEN, WAS,
 };
-
 
 export function PlayerCard({ player }) {
   if (!player) return null;
 
-  let foot = Math.floor(player.height / 12);
-  let inch = player.height % 12;
-  
-  // Format birth date if available
+  const foot = Math.floor(player.height / 12);
+  const inch = player.height % 12;
+
   const formatBirthDate = (dateStr) => {
     if (!dateStr) return "N/A";
     try {
@@ -88,37 +56,54 @@ export function PlayerCard({ player }) {
   };
 
   return (
-    <div className="flex items-center gap-4 bg-slate-900/40 rounded-xl p-3">
+    <div className="flex items-start sm:items-center gap-3 sm:gap-4 bg-slate-900/40 rounded-xl p-3">
       <img
         src={player.headshot || "/default-player.png"}
         alt={player.display_name}
-        className="w-16 h-16 rounded-full object-cover border border-white/10"
+        className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border border-white/10 flex-shrink-0"
         onError={(e) => {
           e.target.src = "/default-player.png";
         }}
       />
-      <div className="flex items-center justify-between w-full">
-        <div>
-            <div className="font-semibold text-xl">{player.display_name}</div>
-            {player.team && teamLogoMap[player.team] && (
-              <div className = "flex">
+
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-2 sm:gap-6">
+        {/* Left: name + compact team line */}
+        <div className="min-w-0">
+          <div className="font-semibold text-lg sm:text-xl leading-tight truncate">
+            {player.display_name}
+          </div>
+
+          {player.team && teamLogoMap[player.team] && (
+            <div className="mt-1 flex items-center gap-2 text-slate-400 text-xs sm:text-sm">
               <img
-                src={`${teamLogoMap[player.team]}`}
+                src={teamLogoMap[player.team]}
                 alt={player.team}
-                className="w-8 h-8 object-contain mr-2"
+                className="w-5 h-5 sm:w-7 sm:h-7 object-contain"
               />
-              <div className="text-slate-400 text-sm"> &middot; {player.team} &middot; {player.position} &middot; {`#${player.jersey_number || "N/A"}`}</div>
+              {/* one line, smaller, not crowded */}
+              <div className="flex items-center gap-2 whitespace-nowrap">
+                <span>{player.team}</span>
+                <span className="opacity-60">•</span>
+                <span>{player.position}</span>
+                <span className="opacity-60">•</span>
+                <span>{`#${player.jersey_number || "N/A"}`}</span>
               </div>
-            )}
-            
-        </div>
-        <div>
-            <div className="text-slate-400 text-sm mt-1">
-                <div>Height: {`${foot}'${inch}`}</div>
-                <div>Weight: {player.weight || "N/A"} lbs</div>
-                <div>College: {player.college || "N/A"}</div>
-                <div>Birth Date: {formatBirthDate(player.birth_date)}</div>
             </div>
+          )}
+        </div>
+
+        {/* Right: spaced out on mobile using a 2-col grid */}
+        <div className="text-slate-400 text-xs sm:text-sm">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1 sm:flex sm:flex-col">
+            <div>Height: {`${foot}'${inch}`}</div>
+            <div>Weight: {player.weight || "N/A"} lbs</div>
+            <div className="col-span-2 sm:col-span-1">
+              College: {player.college || "N/A"}
+            </div>
+            <div className="col-span-2 sm:col-span-1">
+              Birth Date: {formatBirthDate(player.birth_date)}
+            </div>
+          </div>
         </div>
       </div>
     </div>
