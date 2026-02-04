@@ -33,14 +33,14 @@ import IND from "../assets/indianapolis-colts-logo-transparent.png";
 import JAX from "../assets/jacksonville-jaguars-logo-transparent.png";
 import KC from "../assets/kansas-city-chiefs-logo-transparent.png";
 import LAC from "../assets/los-angeles-chargers-logo-transparent.png";
-import LAR from "../assets/la-rams-logo-png-transparent.png";
+import LA from "../assets/la-rams-logo-png-transparent.png";
 import MIA from "../assets/miami-dolphins-logo-transparent.png";
 import MIN from "../assets/minnesota-vikings-logo-transparent.png";
 import NE from "../assets/new-england-patriots-logo-transparent.png";
 import NO from "../assets/new-orleans-saints-logo-transparent.png";
 import NYG from "../assets/new-york-giants-logo-transparent.png";
 import NYJ from "../assets/new-york-jets-logo-png-transparent-2024.png";
-import OAK from "../assets/oakland-raiders-logo-transparent.png";
+import LV from "../assets/oakland-raiders-logo-transparent.png";
 import PHI from "../assets/philadelphia-eagles-logo-transparent.png";
 import PIT from "../assets/pittsburgh-steelers-logo-transparent.png";
 import SF from "../assets/san-francisco-49ers-logo-transparent.png";
@@ -67,14 +67,14 @@ export const teamLogoMap = {
   JAX,
   KC,
   LAC,
-  LAR,
+  LA,
   MIA,
   MIN,
   NE,
   NO,
   NYG,
   NYJ,
-  OAK,
+  LV,
   PHI,
   PIT,
   SF,
@@ -502,7 +502,7 @@ export default function ArchetypeDefinitions() {
 
             {/* Comparable Players (moved here: below selector, left of analysis) */}
             {selectedPlayerId && (
-              <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-4 hover:border-white/20 transition">
+              <div className="hidden lg:block backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-4 hover:border-white/20 transition">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-base font-semibold text-white">
                     Comparable Players
@@ -536,7 +536,7 @@ export default function ArchetypeDefinitions() {
             <div className="lg:col-span-3 space-y-6">
               {/* Player Info Card */}
               <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-6 hover:border-white/20 transition">
-                <div className="flex justify-between items-start gap-6">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 sm:gap-6">
                   <div className="flex gap-4 flex-1">
                     {selectedPlayer.headshot && (
                       <img
@@ -547,7 +547,7 @@ export default function ArchetypeDefinitions() {
                       />
                     )}
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
+                      <div className="flex items-center gap-3 mb-2 flex-wrap">
                         <h2 className="text-3xl font-bold text-white">
                           {selectedPlayer.display_name}
                         </h2>
@@ -605,7 +605,7 @@ export default function ArchetypeDefinitions() {
                       className={`bg-gradient-to-br ${
                         archetypeStyles[analysis.archetypeKey] ||
                         "from-slate-600 to-slate-400"
-                      } rounded-lg px-6 py-4 min-w-max`}
+                      } rounded-lg px-4 py-3 sm:px-6 sm:py-4 w-fit sm:min-w-max self-start sm:self-auto mt-3 sm:mt-0`}
                     >
                       <div className="text-sm font-semibold text-white uppercase tracking-wider">
                         {analysis.archetype.name}
@@ -614,6 +614,36 @@ export default function ArchetypeDefinitions() {
                   )}
                 </div>
               </div>
+
+              {/* Comparable Players (mobile: show after main player card) */}
+              {selectedPlayerId && (
+                <div className="lg:hidden backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-4 hover:border-white/20 transition">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-base font-semibold text-white">
+                      Comparable Players
+                    </h3>
+                    {loading && (
+                      <span className="text-xs text-slate-400">Loading…</span>
+                    )}
+                  </div>
+
+                  {!loading &&
+                  analysis?.similarPlayers &&
+                  analysis.similarPlayers.length > 0 ? (
+                    <div className="space-y-2">
+                      {analysis.similarPlayers.map((similar, idx) => (
+                        <SimilarPlayerRow key={`${similar.id}-${idx}`} similar={similar} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-slate-400">
+                      {loading
+                        ? "Finding similar players…"
+                        : "Select a player to see comps."}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {loading ? (
                 <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-8 text-center">
@@ -728,9 +758,7 @@ export default function ArchetypeDefinitions() {
                             textAnchor="end"
                             height={60}
                           />
-                          <YAxis
-                            tick={{ fill: "#94a3b8", fontSize: 12 }}
-                          />
+                          <YAxis tick={{ fill: "#94a3b8", fontSize: 12 }} />
                           <Tooltip
                             contentStyle={{
                               backgroundColor: "rgba(15, 23, 42, 0.8)",
@@ -763,9 +791,7 @@ export default function ArchetypeDefinitions() {
                               dataKey="week"
                               tick={{ fill: "#94a3b8", fontSize: 12 }}
                             />
-                            <YAxis
-                              tick={{ fill: "#94a3b8", fontSize: 12 }}
-                            />
+                            <YAxis tick={{ fill: "#94a3b8", fontSize: 12 }} />
                             <Tooltip
                               contentStyle={{
                                 backgroundColor: "rgba(15, 23, 42, 0.8)",
@@ -798,16 +824,18 @@ export default function ArchetypeDefinitions() {
                       </div>
                     )}
 
-                  {weeklyStats && weeklyStats.length > 0 && !hasWeeklySeriesData && (
-                    <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-6 hover:border-white/20 transition">
-                      <h3 className="text-lg font-semibold text-white mb-4">
-                        Weekly Trend
-                      </h3>
-                      <div className="text-center py-8 text-slate-400">
-                        <p>Weekly data not available.</p>
+                  {weeklyStats &&
+                    weeklyStats.length > 0 &&
+                    !hasWeeklySeriesData && (
+                      <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-6 hover:border-white/20 transition">
+                        <h3 className="text-lg font-semibold text-white mb-4">
+                          Weekly Trend
+                        </h3>
+                        <div className="text-center py-8 text-slate-400">
+                          <p>Weekly data not available.</p>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </>
               ) : (
                 <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-8 text-center text-slate-400">
@@ -926,23 +954,23 @@ export default function ArchetypeDefinitions() {
                 {[
                   {
                     name: "YAC Monster",
-                    desc: "Yards after catch specialist dominating after the grab",
-                  },
-                  {
-                    name: "Red Zone Threat",
-                    desc: "Reliable target near the end zone",
-                  },
-                  {
-                    name: "X-Factor",
-                    desc: "Game-changing playmaker who creates explosive opportunities",
+                    desc: "Explosive after the catch with elite elusiveness and burst",
                   },
                   {
                     name: "Deep Threat",
-                    desc: "Specialized in vertical routes and big plays",
+                    desc: "Vertical weapon stretching defenses with speed and big plays",
                   },
                   {
                     name: "Chain Mover",
-                    desc: "Consistent performer who keeps drives alive",
+                    desc: "Reliable target converting key downs with route precision",
+                  },
+                  {
+                    name: "Red Zone Threat",
+                    desc: "Physical scorer dominating contested catches near the end zone",
+                  },
+                  {
+                    name: "X-Factor",
+                    desc: "Game-breaking receiver who changes defenses and gameplans",
                   },
                 ].map((archetype, idx) => (
                   <div
@@ -963,10 +991,51 @@ export default function ArchetypeDefinitions() {
               </div>
             </div>
 
+            {/* TE Archetypes */}
+            <div>
+              <h3 className="text-xl font-bold text-slate-200 mb-4 flex items-center gap-2">
+                <span className="w-8 h-8 bg-gradient-to-br from-pink-500 to-pink-600 rounded flex items-center justify-center text-white font-bold">
+                  TE
+                </span>
+                Tight Ends
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[
+                  {
+                    name: "Red Zone Threat",
+                    desc: "Reliable scoring target with size and hands near the goal line",
+                  },
+                  {
+                    name: "Chain Mover",
+                    desc: "Middle-of-field safety blanket converting third downs",
+                  },
+                  {
+                    name: "YAC Monster",
+                    desc: "Tight end who breaks tackles and creates extra yards after catch",
+                  },
+                ].map((archetype, idx) => (
+                  <div
+                    key={`te-${idx}`}
+                    className="group backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-5 hover:border-pink-500/50 hover:bg-white/10 transition cursor-pointer"
+                  >
+                    <p className="text-xs font-bold text-pink-400 uppercase tracking-wider mb-2">
+                      ARCHETYPE
+                    </p>
+                    <p className="text-lg font-bold text-white mb-3 group-hover:text-pink-300 transition">
+                      {archetype.name}
+                    </p>
+                    <p className="text-sm text-slate-400 leading-relaxed">
+                      {archetype.desc}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* DB Archetypes */}
             <div>
               <h3 className="text-xl font-bold text-slate-200 mb-4 flex items-center gap-2">
-                <span className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded flex items-center justify-center text-white font-bold">
+                <span className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded flex items-center justify-center text-white font-bold">
                   DB
                 </span>
                 Defensive Backs
@@ -975,25 +1044,25 @@ export default function ArchetypeDefinitions() {
                 {[
                   {
                     name: "Lockdown",
-                    desc: "Elite man-coverage cornerback shutting down receivers",
+                    desc: "Elite coverage defender who erases top receivers",
                   },
                   {
                     name: "Ballhawk",
-                    desc: "Ball-hawking safety excelling at turnovers",
+                    desc: "Playmaker with instincts to generate interceptions and turnovers",
                   },
                   {
                     name: "Swiss Army Knife",
-                    desc: "Versatile defender aligned in multiple positions",
+                    desc: "Versatile DB who plays multiple roles (slot, safety, boundary)",
                   },
                 ].map((archetype, idx) => (
                   <div
                     key={`db-${idx}`}
-                    className="group backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-5 hover:border-red-500/50 hover:bg-white/10 transition cursor-pointer"
+                    className="group backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-5 hover:border-yellow-500/50 hover:bg-white/10 transition cursor-pointer"
                   >
-                    <p className="text-xs font-bold text-red-400 uppercase tracking-wider mb-2">
+                    <p className="text-xs font-bold text-yellow-400 uppercase tracking-wider mb-2">
                       ARCHETYPE
                     </p>
-                    <p className="text-lg font-bold text-white mb-3 group-hover:text-red-300 transition">
+                    <p className="text-lg font-bold text-white mb-3 group-hover:text-yellow-300 transition">
                       {archetype.name}
                     </p>
                     <p className="text-sm text-slate-400 leading-relaxed">
@@ -1004,6 +1073,12 @@ export default function ArchetypeDefinitions() {
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="mt-12 text-center text-xs text-slate-500">
+          <p>
+            Note: Archetype results are based on available season and weekly stats.
+          </p>
         </div>
       </div>
     </div>
