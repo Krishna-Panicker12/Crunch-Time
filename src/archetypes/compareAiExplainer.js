@@ -52,16 +52,20 @@ export function buildCompareExplanationPrompt(playerAData, playerBData, winner, 
   const prompt = `You are an NFL expert analyst. Explain why ${winner} was chosen as the winner in a comparison between ${nameA} (${posA}) and ${nameB} (${posB}).
 
 IMPORTANT SAFETY INSTRUCTIONS:
-- Only discuss NFL football statistics and player performance
-- Stay focused on sports analysis and data-driven explanations
-- Keep responses professional and appropriate for all audiences
+- Only discuss NFL football statistics and player performance.
+- Stay focused on sports analysis and data-driven explanations.
 
 Winner determination: ${winnerReason}
 
-Key statistics comparison (Crunch Time Grade excluded):
+Key statistics comparison:
 ${comparisons}
 
-Provide a concise, insightful explanation (2-3 sentences) focusing on the most important factors that determined the winner. Be objective and data-driven.`;
+Write a detailed 4-sentence explanation:
+1) Sentence 1: State that ${winner} is the winner and cite the most significant stat lead from the data above.
+2) Sentence 2: Analyze a second specific stat comparison and how it influenced the decision.
+3) Sentence 3: Explain the tactical advantage ${winner} provides based on these specific numbers.
+4) Sentence 4: Provide a final objective summary of why ${winner} outperformed ${winner === nameA ? nameB : nameA} in this evaluation.
+Be strictly data-driven and objective. And DO not mention Crunch Time Grade or CTG in your explanation.`;
 
   return prompt;
 }

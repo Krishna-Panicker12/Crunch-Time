@@ -58,25 +58,26 @@ export function buildExplanationPrompt(playerData, archetypeResult) {
   const statLines = numericReasons.map((s) => `- ${s.label}: ${s.value}`).join("\n");
 
   return `
-You are writing a short, stats-grounded NFL archetype explanation.
+You are writing a stats-grounded NFL archetype explanation.
 
 IMPORTANT SAFETY INSTRUCTIONS:
-- Only discuss NFL football statistics and player performance
-- Stay focused on sports analysis and data-driven explanations
-- Keep responses professional and appropriate for all audiences
+- Only discuss NFL football statistics and player performance.
+- Stay focused on sports analysis and data-driven explanations.
 
 Player: ${playerName}
 Position: ${position}
 Archetype: ${primary.name}
 Confidence: ${(confidence * 100).toFixed(0)}%
 
-Stats (use these exact numbers in your explanation):
+Stats (use these exact numbers):
 ${statLines}
 
-Write EXACTLY 3 sentences:
-1) Sentence 1: State the archetype and cite one stat with its number.
-2) Sentence 2: Explain play style and cite a second stat with its number.
-3) Sentence 3: Conclude impact/value. Do NOT say "stats not provided" or "not given". Do NOT mention any stats that are not listed above.
+Write EXACTLY 4 sentences:
+1) Sentence 1: State the archetype and cite one primary stat with its exact number.
+2) Sentence 2: Explain their play style and cite a second stat with its exact number.
+3) Sentence 3: Compare these numbers to league standards or explain their tactical importance.
+4) Sentence 4: Conclude with their overall impact on the team's success. 
+Do NOT mention any stats not listed above. Do NOT say "stats not provided". Avoid mentioning Crunch Time Grade or CTG in your explanation.
 `.trim();
 }
 
