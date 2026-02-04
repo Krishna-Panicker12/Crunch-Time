@@ -66,6 +66,7 @@ Guidelines:
 - Reference 2 to 3 specific stat comparisons from the data below using their exact numbers.
 - Use those numbers to explain *why* ${winner} held an advantage, focusing on efficiency, consistency,
   situational effectiveness, or role-specific impact.
+- If there are any stats that the losing player excelled in or did better than the winner, briefly acknowledge them and talk about its importance.
 - Maintain an objective, analytical tone — avoid hype or subjective language.
 
 Hard rules:

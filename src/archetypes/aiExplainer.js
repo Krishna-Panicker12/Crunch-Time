@@ -21,13 +21,10 @@ export function buildExplanationPrompt(playerData, archetypeResult) {
 
   if (!primary || !stats) return null;
 
-  // Keep ONLY real numeric stats (no N/A)
-  const candidates = Array.isArray(reasons) ? reasons : [];
-  const numericReasons = candidates
-    .map((r) => {
-      const key = r.statKey;
-      const raw = stats?.[key];
-      const num = raw == null ? null : Number(raw);
+  // Include ALL available numeric stats for the AI to choose from
+  const allStats = Object.entries(stats)
+    .map(([key, value]) => {
+      const num = value == null ? null : Number(value);
       return {
         statKey: key,
         label: STAT_DISPLAY_NAMES[key] || key,
@@ -35,27 +32,11 @@ export function buildExplanationPrompt(playerData, archetypeResult) {
       };
     })
     .filter((x) => x.value !== null)
-    .slice(0, 3);
+    .slice(0, 20); // Limit to 20 most relevant stats to avoid overwhelming the AI
 
-  // If reasons don't map to numeric stats, fall back to any numeric stats available
-  if (numericReasons.length === 0) {
-    const fallbackKeys = Object.keys(stats).slice(0, 3);
-    for (const key of fallbackKeys) {
-      const num = Number(stats[key]);
-      if (Number.isFinite(num)) {
-        numericReasons.push({
-          statKey: key,
-          label: STAT_DISPLAY_NAMES[key] || key,
-          value: num,
-        });
-      }
-      if (numericReasons.length >= 3) break;
-    }
-  }
+  if (allStats.length === 0) return null;
 
-  if (numericReasons.length === 0) return null;
-
-  const statLines = numericReasons.map((s) => `- ${s.label}: ${s.value}`).join("\n");
+  const statLines = allStats.map((s) => `- ${s.label}: ${s.value}`).join("\n");
 
   return `
 You are writing a stats-grounded NFL archetype explanation.
@@ -74,14 +55,14 @@ ${statLines}
 
 - Write 4 to 5 fluid, natural sentences (do NOT number them).
 - Clearly identify the player’s archetype early in the explanation.
-- Reference 2 to 3 specific stats from the list below using their exact numbers.
+- Reference 2 to 3 specific stats from the list above using their exact numbers.
+- Choose stats that best demonstrate the characteristics of this archetype.
 - Use the stats to support traits commonly associated with this archetype
   (e.g., efficiency, aggressiveness, mobility, physicality, consistency, explosiveness).
 - You may explain *why* these numbers matter tactically or relative to typical league expectations,
   but do not invent league averages or cite stats that are not provided.
 - Maintain a confident, analytical tone — avoid robotic or template-like phrasing.
 - Do NOT mention Crunch Time Grade, CTG, grades, or overall scores.
-- Do NOT mention any stat that is not explicitly listed.
 - Do NOT say “stats not provided” or reference missing data.
 `.trim();
 }
