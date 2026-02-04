@@ -31,8 +31,8 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         generationConfig: {
-          temperature: 0.6,
-          maxOutputTokens: 800,
+          temperature: 0.5,
+          maxOutputTokens: 2000,
         },
       }),
     });
