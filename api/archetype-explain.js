@@ -37,7 +37,7 @@ export default async function handler(req, res) {
           { role: "user", content: prompt },
         ],
         temperature: 0.5,
-        max_tokens: 2000, // equivalent to your Gemini 2000 output tokens
+        max_tokens: 1000, // equivalent to your Gemini 2000 output tokens
       }),
     });
 

@@ -72,12 +72,17 @@ Confidence: ${(confidence * 100).toFixed(0)}%
 Stats (use these exact numbers):
 ${statLines}
 
-Write EXACTLY 4 sentences:
-1) Sentence 1: State the archetype and cite one primary stat with its exact number.
-2) Sentence 2: Explain their play style and cite a second stat with its exact number.
-3) Sentence 3: Compare these numbers to league standards or explain their tactical importance.
-4) Sentence 4: Conclude with their overall impact on the team's success. 
-Do NOT mention any stats not listed above. Do NOT say "stats not provided". Avoid mentioning Crunch Time Grade or CTG in your explanation.
+- Write 4 to 5 fluid, natural sentences (do NOT number them).
+- Clearly identify the player’s archetype early in the explanation.
+- Reference 2 to 3 specific stats from the list below using their exact numbers.
+- Use the stats to support traits commonly associated with this archetype
+  (e.g., efficiency, aggressiveness, mobility, physicality, consistency, explosiveness).
+- You may explain *why* these numbers matter tactically or relative to typical league expectations,
+  but do not invent league averages or cite stats that are not provided.
+- Maintain a confident, analytical tone — avoid robotic or template-like phrasing.
+- Do NOT mention Crunch Time Grade, CTG, grades, or overall scores.
+- Do NOT mention any stat that is not explicitly listed.
+- Do NOT say “stats not provided” or reference missing data.
 `.trim();
 }
 

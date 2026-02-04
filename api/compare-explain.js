@@ -37,7 +37,7 @@ export default async function handler(req, res) {
           { role: "user", content: prompt },
         ],
         temperature: 0.7,
-        max_tokens: 180, // matches your Gemini compare token limit
+        max_tokens: 300, // matches your Gemini compare token limit
       }),
     });
 

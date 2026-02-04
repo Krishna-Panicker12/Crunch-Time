@@ -60,12 +60,19 @@ Winner determination: ${winnerReason}
 Key statistics comparison:
 ${comparisons}
 
-Write a detailed 4-sentence explanation:
-1) Sentence 1: State that ${winner} is the winner and cite the most significant stat lead from the data above.
-2) Sentence 2: Analyze a second specific stat comparison and how it influenced the decision.
-3) Sentence 3: Explain the tactical advantage ${winner} provides based on these specific numbers.
-4) Sentence 4: Provide a final objective summary of why ${winner} outperformed ${winner === nameA ? nameB : nameA} in this evaluation.
-Be strictly data-driven and objective. And DO not mention Crunch Time Grade or CTG in your explanation.`;
+Guidelines:
+- Write 4 fluid, natural sentences (do NOT number them).
+- Clearly identify ${winner} as the winner early in the explanation.
+- Reference 2 to 3 specific stat comparisons from the data below using their exact numbers.
+- Use those numbers to explain *why* ${winner} held an advantage, focusing on efficiency, consistency,
+  situational effectiveness, or role-specific impact.
+- Maintain an objective, analytical tone — avoid hype or subjective language.
+
+Hard rules:
+- Do NOT mention Crunch Time Grade, CTG, grades, or overall scores.
+- Do NOT mention any stat that is not explicitly listed below.
+- Do NOT invent league averages or external benchmarks.
+- Do NOT reference the evaluation process itself.`
 
   return prompt;
 }
