@@ -8,9 +8,19 @@ import { STAT_DISPLAY_NAMES, BETTER_DIRECTION } from "../utils/statsMapping.js";
 
 // Client-side timeout for the HTTP request to your Vercel API route.
 // (This is not the Gemini timeout; it's just how long the browser waits.)
-const CLIENT_TIMEOUT_MS = Number(
-  import.meta.env.VITE_GEMINI_TIMEOUT_MS || 60000
-);
+const CLIENT_TIMEOUT_MS = Number(import.meta.env.VITE_GEMINI_TIMEOUT_MS || 60000);
+
+// Basic quality gate: prevents showing cut-off / incomplete AI outputs.
+function isBadAiText(t) {
+  if (!t) return true;
+  const text = String(t).trim();
+  if (!text) return true;
+
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length < 10) return true;
+  if (!/[.!?]["')\]]?\s*$/.test(text)) return true;
+  return false;
+}
 
 /**
  * Format comparison data into a structured prompt
@@ -68,7 +78,6 @@ Provide a concise, insightful explanation (2-3 sentences) focusing on the most i
 
 /**
  * Call hosted AI via Vercel API route (Gemini runs server-side)
- * Keeping the same function name signature style so other code won't break.
  */
 async function callLocalLLM(prompt, opts = {}) {
   const { signal } = opts;
@@ -77,7 +86,6 @@ async function callLocalLLM(prompt, opts = {}) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), CLIENT_TIMEOUT_MS);
 
-  // Tie external abort → internal abort
   const onAbort = () => controller.abort();
   if (signal) signal.addEventListener("abort", onAbort);
 
@@ -99,7 +107,13 @@ async function callLocalLLM(prompt, opts = {}) {
     }
 
     const data = await response.json();
-    return data?.text?.trim() || null;
+    const text = data?.text?.trim() || null;
+
+    if (import.meta.env.DEV && data?.finishReason) {
+      console.debug("[compare AI] finishReason:", data.finishReason);
+    }
+
+    return isBadAiText(text) ? null : text;
   } catch (error) {
     if (error?.name === "AbortError") return null;
     console.warn("Failed to call /api/compare-explain:", error);
@@ -120,8 +134,6 @@ function generateTemplateExplanation(playerAData, playerBData, winner) {
 
 /**
  * Main function: Generate AI explanation for comparison winner
- * MUST match Compare.jsx call signature:
- * (playerAData, playerBData, winner, winnerReason, useAI, opts)
  */
 export async function generateCompareExplanation(
   playerAData,
@@ -139,7 +151,7 @@ export async function generateCompareExplanation(
   if (!prompt) return { text: template, source: "template" };
 
   const aiText = await callLocalLLM(prompt, opts);
-  if (aiText) return { text: aiText, source: "ai" };
+  if (!isBadAiText(aiText)) return { text: aiText, source: "ai" };
 
   return { text: template, source: "template" };
 }

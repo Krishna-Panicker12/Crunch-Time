@@ -598,7 +598,7 @@ useEffect(() => {
                     <p className="text-slate-300">Generating AI analysis. This can take sometime, your patience is appreciated.</p>
                   </div>
                 ) : aiExplanation ? (
-                  <p className="text-slate-300 text-sm">
+                  <p className="text-slate-300 text-sm whitespace-pre-wrap">
                     {aiExplanation.text}
                   </p>
                 ) : null}
