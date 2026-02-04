@@ -15,6 +15,7 @@ import { listPlayers, getPlayerSeason, getPlayerWeeks } from "../db/playerReads"
 import { analyzePlayer } from "../archetypes/engine";
 import { STAT_DISPLAY_NAMES, STAT_ORDER } from "../utils/statsMapping";
 import { generateExplanation } from "../archetypes/aiExplainer";
+
 import ARI from "../assets/arizona-cardinals-logo-transparent.png";
 import ATL from "../assets/atlanta-falcons-logo-transparent.png";
 import BAL from "../assets/baltimore-ravens-logo-transparent.png";
@@ -47,7 +48,6 @@ import SEA from "../assets/seattle-seahawks-logo-transparent.png";
 import TB from "../assets/tampa-bay-buccaneers-logo-transparent.png";
 import TEN from "../assets/tennessee-titans-logo-transparent.png";
 import WAS from "../assets/Washington-Commanders.png";
-
 
 export const teamLogoMap = {
   ARI,
@@ -83,7 +83,6 @@ export const teamLogoMap = {
   TEN,
   WAS,
 };
-
 
 // Archetype color styles
 const archetypeStyles = {
@@ -291,16 +290,18 @@ export default function ArchetypeDefinitions() {
 
   // Position-specific stats for weekly trend
   const positionChartStats = {
-    QB: ['clutch', 'pass_yards', 'pass_tds'],
-    RB: ['rush_yards', 'rec_yards', 'rush_tds'],
-    WR: ['rec_yards', 'receptions', 'rec_tds'],
-    DB: ['passes_defended', 'solo_tackles', 'interceptions'],
+    QB: ["clutch", "pass_yards", "pass_tds"],
+    RB: ["rush_yards", "rec_yards", "rush_tds"],
+    WR: ["rec_yards", "receptions", "rec_tds"],
+    DB: ["passes_defended", "solo_tackles", "interceptions"],
   };
 
   const effectiveChartKeys = (() => {
     const specificStats = positionChartStats[position];
     if (specificStats) {
-      const validSpecific = specificStats.filter((k) => k === 'clutch' || weeklyAvailableKeys.includes(k));
+      const validSpecific = specificStats.filter(
+        (k) => k === "clutch" || weeklyAvailableKeys.includes(k)
+      );
       if (validSpecific.length > 0) return validSpecific;
     }
 
@@ -314,9 +315,11 @@ export default function ArchetypeDefinitions() {
     const stats = week?.stats ?? {};
 
     effectiveChartKeys.forEach((key) => {
-      const label = key === 'clutch' ? 'Crunch Time Grade' : getStatLabel(key);
-      const raw = key === 'clutch' ? (stats?.[key] ?? null) : stats?.[key] ?? null;
-      const num = raw == null ? null : (key === 'clutch' ? Number(raw) * 100 : Number(raw));
+      const label =
+        key === "clutch" ? "Crunch Time Grade" : getStatLabel(key);
+      const raw = key === "clutch" ? stats?.[key] ?? null : stats?.[key] ?? null;
+      const num =
+        raw == null ? null : key === "clutch" ? Number(raw) * 100 : Number(raw);
       weekData[label] = Number.isFinite(num) ? num : null;
     });
 
@@ -335,9 +338,9 @@ export default function ArchetypeDefinitions() {
     const data = [];
 
     // Add crunch time grade for QB
-    if (position === 'QB' && analysis?.features?.clutch !== undefined) {
+    if (position === "QB" && analysis?.features?.clutch !== undefined) {
       data.push({
-        name: 'Crunch Time Grade',
+        name: "Crunch Time Grade",
         value: Math.round(analysis.features.clutch * 100), // as percentage
       });
     }
@@ -354,7 +357,9 @@ export default function ArchetypeDefinitions() {
     const finalKeys =
       validKeys.length > 0
         ? validKeys.slice(0, 6 - data.length)
-        : positionStats.filter((k) => playerStats[k] !== undefined).slice(0, 6 - data.length);
+        : positionStats
+            .filter((k) => playerStats[k] !== undefined)
+            .slice(0, 6 - data.length);
 
     finalKeys.forEach((key) => {
       data.push({
@@ -367,6 +372,84 @@ export default function ArchetypeDefinitions() {
 
     return data;
   })();
+
+  // --- Similar player meta lookup (adds headshot + ensures team/pos present) ---
+  const getPlayerMetaById = (id) => allPlayers.find((p) => p.id === id) || null;
+
+  const SimilarPlayerRow = ({ similar }) => {
+    const meta = getPlayerMetaById(similar.id);
+    const headshot = meta?.headshot || null;
+    const team = meta?.team || similar.team || "—";
+    const pos = meta?.position || similar.position || "—";
+    const name = meta?.display_name || similar.name || "Unknown";
+
+    // your similarity engine dampens to ~30-80; UI can still cap if you want
+    const similarity = Math.min(similar.similarity ?? 0, 99);
+
+    return (
+      <button
+        type="button"
+        onClick={() => setSelectedPlayerId(similar.id)}
+        className="w-full text-left bg-slate-900/50 rounded-lg px-3 py-3 border border-white/5 hover:border-white/20 hover:bg-slate-900/60 transition flex items-center justify-between gap-3"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          {headshot ? (
+            <img
+              src={headshot}
+              alt={name}
+              className="w-10 h-10 rounded-md object-cover border border-white/10 shrink-0"
+              onError={(e) => (e.currentTarget.style.display = "none")}
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-md bg-white/5 border border-white/10 shrink-0" />
+          )}
+
+          <div className="min-w-0">
+            <p className="text-white font-semibold truncate">{name}</p>
+            <div className="flex items-center gap-2 text-xs text-slate-400">
+              <span className="truncate">
+                {team} • {pos}
+              </span>
+              {teamLogoMap[team] && (
+                <img
+                  src={`${teamLogoMap[team]}`}
+                  alt={team}
+                  className="w-4 h-4 object-contain"
+                  onError={(e) => (e.currentTarget.style.display = "none")}
+                />
+              )}
+            </div>
+
+            {similar.sharedTraits?.length > 0 && (
+              <p className="text-[11px] text-slate-500 mt-1 truncate">
+                Shared:{" "}
+                <span className="text-slate-400">
+                  {similar.sharedTraits
+                    .map((trait) => formatCamelCase(trait))
+                    .join(", ")}
+                </span>
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="shrink-0 text-right">
+          <div className="flex items-center gap-2 mb-1 justify-end">
+            <div className="w-16 h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all"
+                style={{ width: `${similarity}%` }}
+              />
+            </div>
+            <p className="text-base font-bold text-white min-w-10 text-right">
+              {similarity.toFixed(0)}%
+            </p>
+          </div>
+          <p className="text-xs text-slate-400">Match</p>
+        </div>
+      </button>
+    );
+  };
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-4">
@@ -383,44 +466,72 @@ export default function ArchetypeDefinitions() {
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-          {/* Position Filter + Player Picker */}
-          <div className="lg:col-span-1">
-            <div className="space-y-4">
-              {/* Position Filter */}
-              <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-4 hover:border-white/20 transition">
-                <label className="block text-sm font-semibold text-white mb-3">
-                  Position
-                </label>
-                <select
-                  value={position}
-                  onChange={(e) => {
-                    setPosition(e.target.value);
-                    setSelectedPlayerId(null);
-                    setSearch("");
-                  }}
-                  className="w-full bg-slate-900/50 border border-white/20 rounded px-3 py-2 text-white text-sm hover:border-white/30 focus:border-white/50 outline-none transition"
-                >
-                  {["QB", "RB", "WR", "TE", "DB"].map((pos) => (
-                    <option key={pos} value={pos}>
-                      {pos}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Player Picker */}
-              <PlayerPicker
-                title="Select Player"
-                search={search}
-                onSearch={setSearch}
-                options={searchFiltered}
-                valueId={selectedPlayerId}
-                onChangeId={setSelectedPlayerId}
-              />
+          {/* LEFT SIDEBAR: Position + Picker + Comparable Players */}
+          <div className="lg:col-span-1 space-y-4">
+            {/* Position Filter */}
+            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-4 hover:border-white/20 transition">
+              <label className="block text-sm font-semibold text-white mb-3">
+                Position
+              </label>
+              <select
+                value={position}
+                onChange={(e) => {
+                  setPosition(e.target.value);
+                  setSelectedPlayerId(null);
+                  setSearch("");
+                }}
+                className="w-full bg-slate-900/50 border border-white/20 rounded px-3 py-2 text-white text-sm hover:border-white/30 focus:border-white/50 outline-none transition"
+              >
+                {["QB", "RB", "WR", "TE", "DB"].map((pos) => (
+                  <option key={pos} value={pos}>
+                    {pos}
+                  </option>
+                ))}
+              </select>
             </div>
+
+            {/* Player Picker */}
+            <PlayerPicker
+              title="Select Player"
+              search={search}
+              onSearch={setSearch}
+              options={searchFiltered}
+              valueId={selectedPlayerId}
+              onChangeId={setSelectedPlayerId}
+            />
+
+            {/* Comparable Players (moved here: below selector, left of analysis) */}
+            {selectedPlayerId && (
+              <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-4 hover:border-white/20 transition">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-base font-semibold text-white">
+                    Comparable Players
+                  </h3>
+                  {loading && (
+                    <span className="text-xs text-slate-400">Loading…</span>
+                  )}
+                </div>
+
+                {!loading &&
+                analysis?.similarPlayers &&
+                analysis.similarPlayers.length > 0 ? (
+                  <div className="space-y-2">
+                    {analysis.similarPlayers.map((similar, idx) => (
+                      <SimilarPlayerRow key={`${similar.id}-${idx}`} similar={similar} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-slate-400">
+                    {loading
+                      ? "Finding similar players…"
+                      : "Select a player to see comps."}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Report Card */}
+          {/* RIGHT CONTENT: Report Card / Analysis */}
           {selectedPlayer && (
             <div className="lg:col-span-3 space-y-6">
               {/* Player Info Card */}
@@ -432,6 +543,7 @@ export default function ArchetypeDefinitions() {
                         src={selectedPlayer.headshot}
                         alt={selectedPlayer.display_name}
                         className="w-32 h-32 rounded-lg object-cover border border-white/10"
+                        onError={(e) => (e.currentTarget.style.display = "none")}
                       />
                     )}
                     <div className="flex-1">
@@ -445,7 +557,9 @@ export default function ArchetypeDefinitions() {
                               src={`${teamLogoMap[selectedPlayer.team]}`}
                               alt={selectedPlayer.team}
                               className="w-10 h-10 object-contain"
-                              onError={(e) => (e.target.style.display = "none")}
+                              onError={(e) =>
+                                (e.currentTarget.style.display = "none")
+                              }
                             />
                           )}
                       </div>
@@ -457,7 +571,7 @@ export default function ArchetypeDefinitions() {
                           {selectedPlayer.college}
                         </p>
                       )}
-                      <div className="flex gap-4 mt-3 text-sm text-slate-400">
+                      <div className="flex gap-4 mt-3 text-sm text-slate-400 flex-wrap">
                         {selectedPlayer.jersey_number && (
                           <p>
                             Jersey:{" "}
@@ -536,6 +650,38 @@ export default function ArchetypeDefinitions() {
                     </div>
                   </div>
 
+                  {/* Loading indicator for AI analysis */}
+                  {aiLoading && (
+                    <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-6 hover:border-white/20 transition text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
+                      <p className="text-slate-300 mt-2">
+                        Generating AI analysis. It can take up to 30 seconds to
+                        load. We appreciate your patience.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* AI Explanation: only show when AI has finished and we actually have text */}
+                  {!aiLoading && analysis?.explanation?.text ? (
+                    <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-6 hover:border-white/20 transition">
+                      <h3 className="text-lg font-semibold text-white mb-2">
+                        Analysis
+                      </h3>
+                      <p className="text-slate-300 text-sm">
+                        {analysis.explanation.text}
+                      </p>
+
+                      {analysis?.explanation?.source === "ai" && (
+                        <p className="text-slate-300 text-xs whitespace-pre-wrap">
+                          Generated by AI •{" "}
+                          {analysis?.timestamp
+                            ? new Date(analysis.timestamp).toLocaleDateString()
+                            : "Unknown date"}
+                        </p>
+                      )}
+                    </div>
+                  ) : null}
+
                   {/* Stats Grid */}
                   {playerStats && Object.keys(playerStats).length > 0 && (
                     <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-6 hover:border-white/20 transition">
@@ -582,7 +728,9 @@ export default function ArchetypeDefinitions() {
                             textAnchor="end"
                             height={60}
                           />
-                          <YAxis tick={{ fill: "#94a3b8", fontSize: 12 }} />
+                          <YAxis
+                            tick={{ fill: "#94a3b8", fontSize: 12 }}
+                          />
                           <Tooltip
                             contentStyle={{
                               backgroundColor: "rgba(15, 23, 42, 0.8)",
@@ -598,45 +746,57 @@ export default function ArchetypeDefinitions() {
                   )}
 
                   {/* Weekly Trend Chart */}
-                  {weeklyStats && weeklyStats.length > 0 && hasWeeklySeriesData && (
-                    <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-6 hover:border-white/20 transition">
-                      <h3 className="text-lg font-semibold text-white mb-4">
-                        Weekly Trend
-                      </h3>
-                      <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={chartData}>
-                          <CartesianGrid
-                            strokeDasharray="3 3"
-                            stroke="rgba(255,255,255,0.1)"
-                          />
-                          <XAxis
-                            dataKey="week"
-                            tick={{ fill: "#94a3b8", fontSize: 12 }}
-                          />
-                          <YAxis tick={{ fill: "#94a3b8", fontSize: 12 }} />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: "rgba(15, 23, 42, 0.8)",
-                              border: "1px solid rgba(255,255,255,0.2)",
-                              borderRadius: "8px",
-                            }}
-                            labelStyle={{ color: "#f1f5f9" }}
-                          />
-                          {effectiveChartKeys.map((key, idx) => (
-                            <Line
-                              key={key}
-                              type="monotone"
-                              dataKey={key === 'clutch' ? 'Crunch Time Grade' : getStatLabel(key)}
-                              stroke={["#60a5fa", "#34d399", "#fbbf24", "#f87171"][idx % 4]}
-                              strokeWidth={2}
-                              isAnimationActive={false}
-                              connectNulls
+                  {weeklyStats &&
+                    weeklyStats.length > 0 &&
+                    hasWeeklySeriesData && (
+                      <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-6 hover:border-white/20 transition">
+                        <h3 className="text-lg font-semibold text-white mb-4">
+                          Weekly Trend
+                        </h3>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <LineChart data={chartData}>
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              stroke="rgba(255,255,255,0.1)"
                             />
-                          ))}
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
+                            <XAxis
+                              dataKey="week"
+                              tick={{ fill: "#94a3b8", fontSize: 12 }}
+                            />
+                            <YAxis
+                              tick={{ fill: "#94a3b8", fontSize: 12 }}
+                            />
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: "rgba(15, 23, 42, 0.8)",
+                                border: "1px solid rgba(255,255,255,0.2)",
+                                borderRadius: "8px",
+                              }}
+                              labelStyle={{ color: "#f1f5f9" }}
+                            />
+                            {effectiveChartKeys.map((key, idx) => (
+                              <Line
+                                key={key}
+                                type="monotone"
+                                dataKey={
+                                  key === "clutch"
+                                    ? "Crunch Time Grade"
+                                    : getStatLabel(key)
+                                }
+                                stroke={
+                                  ["#60a5fa", "#34d399", "#fbbf24", "#f87171"][
+                                    idx % 4
+                                  ]
+                                }
+                                strokeWidth={2}
+                                isAnimationActive={false}
+                                connectNulls
+                              />
+                            ))}
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
 
                   {weeklyStats && weeklyStats.length > 0 && !hasWeeklySeriesData && (
                     <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-6 hover:border-white/20 transition">
@@ -645,89 +805,6 @@ export default function ArchetypeDefinitions() {
                       </h3>
                       <div className="text-center py-8 text-slate-400">
                         <p>Weekly data not available.</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Loading indicator for AI analysis */}
-                  {aiLoading && (
-                    <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-6 hover:border-white/20 transition text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
-                      <p className="text-slate-300 mt-2">Generating AI analysis. It can take up to 30 seconds to load. We appreciate your patience.</p>
-                    </div>
-                  )}
-
-                  {/* AI Explanation: only show when AI has finished and we actually have text */}
-                  {!aiLoading && analysis?.explanation?.text ? (
-                    <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-6 hover:border-white/20 transition">
-                      <h3 className="text-lg font-semibold text-white mb-2">
-                        Analysis
-                      </h3>
-                      <p className="text-slate-300 text-sm">
-                        {analysis.explanation.text}
-                      </p>
-
-                      {analysis?.explanation?.source === "ai" && (
-                        <p className="text-slate-300 text-xs whitespace-pre-wrap">
-                          Generated by AI •{" "}
-                          {analysis?.timestamp
-                            ? new Date(analysis.timestamp).toLocaleDateString()
-                            : "Unknown date"}
-                        </p>
-                      )}
-                    </div>
-                  ) : null}
-
-                  {/* Similar Players */}
-                  {analysis.similarPlayers && analysis.similarPlayers.length > 0 && (
-                    <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-6 hover:border-white/20 transition">
-                      <h3 className="text-lg font-semibold text-white mb-4">
-                        Comparable Players
-                      </h3>
-                      <div className="space-y-3">
-                        {analysis.similarPlayers.map((similar, idx) => {
-                          const similarity = Math.min(similar.similarity, 85);
-                          return (
-                            <div
-                              key={idx}
-                              className="bg-slate-900/50 rounded-lg px-4 py-3 border border-white/5 hover:border-white/20 transition flex justify-between items-center"
-                            >
-                              <div className="flex-1">
-                                <p className="text-white font-semibold">
-                                  {similar.name || "Unknown"}
-                                </p>
-                                <p className="text-xs text-slate-400">
-                                  {similar.team || "—"} • {similar.position || "—"}
-                                </p>
-                                {similar.sharedTraits &&
-                                  similar.sharedTraits.length > 0 && (
-                                    <p className="text-xs text-slate-500 mt-2">
-                                      Shared:{" "}
-                                      <span className="text-slate-400">
-                                        {similar.sharedTraits
-                                          .map((trait) => formatCamelCase(trait))
-                                          .join(", ")}
-                                      </span>
-                                    </p>
-                                  )}
-                              </div>
-                              <div className="text-right ml-4">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <div className="w-16 h-2 bg-slate-700 rounded-full overflow-hidden">
-                                    <div
-                                      className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all"
-                                      style={{ width: `${similarity}%` }}
-                                    ></div>
-                                  </div>
-                                  <p className="text-lg font-bold text-white min-w-12 text-right">
-                                    {similarity.toFixed(0)}%
-                                  </p>
-                                </div>
-                                <p className="text-xs text-slate-400">Match</p>
-                              </div>
-                            </div>
-                          );
-                        })}
                       </div>
                     </div>
                   )}
@@ -743,8 +820,12 @@ export default function ArchetypeDefinitions() {
 
         {/* Archetype Library (unchanged) */}
         <div className="mt-12">
-          <h2 className="text-3xl font-bold text-white mb-2">Archetype Library</h2>
-          <p className="text-slate-400 mb-8">Explore all player archetypes and their characteristics</p>
+          <h2 className="text-3xl font-bold text-white mb-2">
+            Archetype Library
+          </h2>
+          <p className="text-slate-400 mb-8">
+            Explore all player archetypes and their characteristics
+          </p>
 
           <div className="space-y-8">
             {/* QB Archetypes */}
@@ -757,20 +838,36 @@ export default function ArchetypeDefinitions() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[
-                  { name: "Field General", desc: "Natural leader commanding the offense with poise and accuracy" },
-                  { name: "Dual Threat", desc: "Mobile QB who can beat defenses with both arm and legs" },
-                  { name: "Gunslinger", desc: "High-volume passer who takes risks and generates big plays" },
-                  { name: "Game Changer", desc: "Elite performer who impacts all aspects of the game" },
+                  {
+                    name: "Field General",
+                    desc: "Natural leader commanding the offense with poise and accuracy",
+                  },
+                  {
+                    name: "Dual Threat",
+                    desc: "Mobile QB who can beat defenses with both arm and legs",
+                  },
+                  {
+                    name: "Gunslinger",
+                    desc: "High-volume passer who takes risks and generates big plays",
+                  },
+                  {
+                    name: "Game Changer",
+                    desc: "Elite performer who impacts all aspects of the game",
+                  },
                 ].map((archetype, idx) => (
                   <div
                     key={`qb-${idx}`}
                     className="group backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-5 hover:border-blue-500/50 hover:bg-white/10 transition cursor-pointer"
                   >
-                    <p className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">ARCHETYPE</p>
+                    <p className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">
+                      ARCHETYPE
+                    </p>
                     <p className="text-lg font-bold text-white mb-3 group-hover:text-blue-300 transition">
                       {archetype.name}
                     </p>
-                    <p className="text-sm text-slate-400 leading-relaxed">{archetype.desc}</p>
+                    <p className="text-sm text-slate-400 leading-relaxed">
+                      {archetype.desc}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -786,19 +883,32 @@ export default function ArchetypeDefinitions() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[
-                  { name: "Workhorse", desc: "Durable back handling heavy workload with consistency" },
-                  { name: "Receiving Back", desc: "Versatile pass-catching threat out of backfield" },
-                  { name: "All-Purpose", desc: "Elite contributor in rushing, receiving, and versatility" },
+                  {
+                    name: "Workhorse",
+                    desc: "Durable back handling heavy workload with consistency",
+                  },
+                  {
+                    name: "Receiving Back",
+                    desc: "Versatile pass-catching threat out of backfield",
+                  },
+                  {
+                    name: "All-Purpose",
+                    desc: "Elite contributor in rushing, receiving, and versatility",
+                  },
                 ].map((archetype, idx) => (
                   <div
                     key={`rb-${idx}`}
                     className="group backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-5 hover:border-green-500/50 hover:bg-white/10 transition cursor-pointer"
                   >
-                    <p className="text-xs font-bold text-green-400 uppercase tracking-wider mb-2">ARCHETYPE</p>
+                    <p className="text-xs font-bold text-green-400 uppercase tracking-wider mb-2">
+                      ARCHETYPE
+                    </p>
                     <p className="text-lg font-bold text-white mb-3 group-hover:text-green-300 transition">
                       {archetype.name}
                     </p>
-                    <p className="text-sm text-slate-400 leading-relaxed">{archetype.desc}</p>
+                    <p className="text-sm text-slate-400 leading-relaxed">
+                      {archetype.desc}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -814,21 +924,40 @@ export default function ArchetypeDefinitions() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[
-                  { name: "YAC Monster", desc: "Yards after catch specialist dominating after the grab" },
-                  { name: "Red Zone Threat", desc: "Reliable target near the end zone" },
-                  { name: "X-Factor", desc: "Game-changing playmaker who creates explosive opportunities" },
-                  { name: "Deep Threat", desc: "Specialized in vertical routes and big plays" },
-                  { name: "Chain Mover", desc: "Consistent performer who keeps drives alive" },
+                  {
+                    name: "YAC Monster",
+                    desc: "Yards after catch specialist dominating after the grab",
+                  },
+                  {
+                    name: "Red Zone Threat",
+                    desc: "Reliable target near the end zone",
+                  },
+                  {
+                    name: "X-Factor",
+                    desc: "Game-changing playmaker who creates explosive opportunities",
+                  },
+                  {
+                    name: "Deep Threat",
+                    desc: "Specialized in vertical routes and big plays",
+                  },
+                  {
+                    name: "Chain Mover",
+                    desc: "Consistent performer who keeps drives alive",
+                  },
                 ].map((archetype, idx) => (
                   <div
                     key={`wr-${idx}`}
                     className="group backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-5 hover:border-purple-500/50 hover:bg-white/10 transition cursor-pointer"
                   >
-                    <p className="text-xs font-bold text-purple-400 uppercase tracking-wider mb-2">ARCHETYPE</p>
+                    <p className="text-xs font-bold text-purple-400 uppercase tracking-wider mb-2">
+                      ARCHETYPE
+                    </p>
                     <p className="text-lg font-bold text-white mb-3 group-hover:text-purple-300 transition">
                       {archetype.name}
                     </p>
-                    <p className="text-sm text-slate-400 leading-relaxed">{archetype.desc}</p>
+                    <p className="text-sm text-slate-400 leading-relaxed">
+                      {archetype.desc}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -844,19 +973,32 @@ export default function ArchetypeDefinitions() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[
-                  { name: "Lockdown", desc: "Elite man-coverage cornerback shutting down receivers" },
-                  { name: "Ballhawk", desc: "Ball-hawking safety excelling at turnovers" },
-                  { name: "Swiss Army Knife", desc: "Versatile defender aligned in multiple positions" },
+                  {
+                    name: "Lockdown",
+                    desc: "Elite man-coverage cornerback shutting down receivers",
+                  },
+                  {
+                    name: "Ballhawk",
+                    desc: "Ball-hawking safety excelling at turnovers",
+                  },
+                  {
+                    name: "Swiss Army Knife",
+                    desc: "Versatile defender aligned in multiple positions",
+                  },
                 ].map((archetype, idx) => (
                   <div
                     key={`db-${idx}`}
                     className="group backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg p-5 hover:border-red-500/50 hover:bg-white/10 transition cursor-pointer"
                   >
-                    <p className="text-xs font-bold text-red-400 uppercase tracking-wider mb-2">ARCHETYPE</p>
+                    <p className="text-xs font-bold text-red-400 uppercase tracking-wider mb-2">
+                      ARCHETYPE
+                    </p>
                     <p className="text-lg font-bold text-white mb-3 group-hover:text-red-300 transition">
                       {archetype.name}
                     </p>
-                    <p className="text-sm text-slate-400 leading-relaxed">{archetype.desc}</p>
+                    <p className="text-sm text-slate-400 leading-relaxed">
+                      {archetype.desc}
+                    </p>
                   </div>
                 ))}
               </div>
