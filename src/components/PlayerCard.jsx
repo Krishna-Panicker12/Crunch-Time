@@ -1,37 +1,71 @@
-const teamLogoMap = {
-  ARI: "arizona-cardinals-logo-transparent.png",
-  ATL: "atlanta-falcons-logo-transparent.png",
-  BAL: "baltimore-ravens-logo-transparent.png",
-  BUF: "buffalo-bills-logo-transparent.png",
-  CAR: "carolina-panthers-logo-transparent.png",
-  CHI: "chicago-bears-logo-transparent.png",
-  CIN: "cincinnati-bengals-logo-transparent.png",
-  CLE: "cleveland-browns-logo-transparent.png",
-  DAL: "Dallas-Cowboys.png",
-  DEN: "denver-broncos-logo-transparent.png",
-  DET: "detroit-lions-logo-transparent.png",
-  GB: "green-bay-packers-logo-transparent.png",
-  HOU: "houston-texans-logo-transparent.png",
-  IND: "indianapolis-colts-logo-transparent.png",
-  JAX: "jacksonville-jaguars-logo-transparent.png",
-  KC: "kansas-city-chiefs-logo-transparent.png",
-  LAC: "los-angeles-chargers-logo-transparent.png",
-  LAR: "la-rams-logo-png-transparent.png",
-  MIA: "miami-dolphins-logo-transparent.png",
-  MIN: "minnesota-vikings-logo-transparent.png",
-  NE: "new-england-patriots-logo-transparent.png",
-  NO: "new-orleans-saints-logo-transparent.png",
-  NYG: "new-york-giants-logo-transparent.png",
-  NYJ: "new-york-jets-logo-png-transparent-2024.png",
-  OAK: "oakland-raiders-logo-transparent.png",
-  PHI: "philadelphia-eagles-logo-transparent.png",
-  PIT: "pittsburgh-steelers-logo-transparent.png",
-  SF: "san-francisco-49ers-logo-transparent.png",
-  SEA: "seattle-seahawks-logo-transparent.png",
-  TB: "tampa-bay-buccaneers-logo-transparent.png",
-  TEN: "tennessee-titans-logo-transparent.png",
-  WAS: "Washington-Commanders.png",
+import ARI from "../assets/arizona-cardinals-logo-transparent.png";
+import ATL from "../assets/atlanta-falcons-logo-transparent.png";
+import BAL from "../assets/baltimore-ravens-logo-transparent.png";
+import BUF from "../assets/buffalo-bills-logo-transparent.png";
+import CAR from "../assets/carolina-panthers-logo-transparent.png";
+import CHI from "../assets/chicago-bears-logo-transparent.png";
+import CIN from "../assets/cincinnati-bengals-logo-transparent.png";
+import CLE from "../assets/cleveland-browns-logo-transparent.png";
+import DAL from "../assets/Dallas-Cowboys.png";
+import DEN from "../assets/denver-broncos-logo-transparent.png";
+import DET from "../assets/detroit-lions-logo-transparent.png";
+import GB from "../assets/green-bay-packers-logo-transparent.png";
+import HOU from "../assets/houston-texans-logo-transparent.png";
+import IND from "../assets/indianapolis-colts-logo-transparent.png";
+import JAX from "../assets/jacksonville-jaguars-logo-transparent.png";
+import KC from "../assets/kansas-city-chiefs-logo-transparent.png";
+import LAC from "../assets/los-angeles-chargers-logo-transparent.png";
+import LAR from "../assets/la-rams-logo-png-transparent.png";
+import MIA from "../assets/miami-dolphins-logo-transparent.png";
+import MIN from "../assets/minnesota-vikings-logo-transparent.png";
+import NE from "../assets/new-england-patriots-logo-transparent.png";
+import NO from "../assets/new-orleans-saints-logo-transparent.png";
+import NYG from "../assets/new-york-giants-logo-transparent.png";
+import NYJ from "../assets/new-york-jets-logo-png-transparent-2024.png";
+import OAK from "../assets/oakland-raiders-logo-transparent.png";
+import PHI from "../assets/philadelphia-eagles-logo-transparent.png";
+import PIT from "../assets/pittsburgh-steelers-logo-transparent.png";
+import SF from "../assets/san-francisco-49ers-logo-transparent.png";
+import SEA from "../assets/seattle-seahawks-logo-transparent.png";
+import TB from "../assets/tampa-bay-buccaneers-logo-transparent.png";
+import TEN from "../assets/tennessee-titans-logo-transparent.png";
+import WAS from "../assets/Washington-Commanders.png";
+
+export const teamLogoMap = {
+  ARI,
+  ATL,
+  BAL,
+  BUF,
+  CAR,
+  CHI,
+  CIN,
+  CLE,
+  DAL,
+  DEN,
+  DET,
+  GB,
+  HOU,
+  IND,
+  JAX,
+  KC,
+  LAC,
+  LAR,
+  MIA,
+  MIN,
+  NE,
+  NO,
+  NYG,
+  NYJ,
+  OAK,
+  PHI,
+  PIT,
+  SF,
+  SEA,
+  TB,
+  TEN,
+  WAS,
 };
+
 
 export function PlayerCard({ player }) {
   if (!player) return null;
@@ -69,7 +103,7 @@ export function PlayerCard({ player }) {
             {player.team && teamLogoMap[player.team] && (
               <div className = "flex">
               <img
-                src={`/src/assets/${teamLogoMap[player.team]}`}
+                src={`${teamLogoMap[player.team]}`}
                 alt={player.team}
                 className="w-8 h-8 object-contain mr-2"
               />
