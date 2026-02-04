@@ -523,7 +523,7 @@ useEffect(() => {
                 onChange={(e) => setSelectedStat(e.target.value)}
                 className="w-full md:w-80 px-4 py-3 rounded-xl bg-slate-900/80 border border-white/10 hover:border-white/20 focus:border-blue-500/50 focus:outline-none transition-all duration-300 backdrop-blur-sm cursor-pointer"
               >
-                <option value="">Choose a statistic...</option>
+                <option value="">Choose a statistic to graph...</option>
                 {availableStats.map(({ value, label }) => (
                   <option key={value} value={value}>
                     {label}
