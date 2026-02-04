@@ -7,23 +7,9 @@
 import { STAT_DISPLAY_NAMES } from "../utils/statsMapping.js";
 
 // Client-side timeout for the HTTP request to your Vercel API route.
-const CLIENT_TIMEOUT_MS = Number(import.meta.env.VITE_GEMINI_TIMEOUT_MS || 60000);
-
-// Basic quality gate: prevents showing cut-off / incomplete AI outputs.
-function isBadAiText(t) {
-  if (!t) return true;
-  const text = String(t).trim();
-  if (!text) return true;
-
-  const words = text.split(/\s+/).filter(Boolean);
-  // If Gemini returns only a few words, it's almost always an early-stop / partial candidate.
-  if (words.length < 10) return true;
-
-  // Ex: "Drake Maye projects as a" (no end punctuation) → treat as incomplete.
-  if (!/[.!?]["')\]]?\s*$/.test(text)) return true;
-
-  return false;
-}
+const CLIENT_TIMEOUT_MS = Number(
+  import.meta.env.VITE_GEMINI_TIMEOUT_MS || 60000
+);
 
 /**
  * Format explanation data into a structured prompt
@@ -99,7 +85,7 @@ Write EXACTLY 3 sentences:
  * Used as fallback
  */
 export function generateTemplateExplanation(playerData, archetypeResult, similarPlayers) {
-  const { playerName } = playerData;
+  const { playerName, stats } = playerData;
   const { primary, reasons } = archetypeResult;
 
   if (!primary) return null;
@@ -153,14 +139,7 @@ export async function callLocalLLM(prompt, opts = {}) {
     }
 
     const data = await response.json();
-    const text = data?.text?.trim() || null;
-
-    // If server returns debug info, surface it for dev without breaking UI.
-    if (import.meta.env.DEV && data?.finishReason) {
-      console.debug("[archetype AI] finishReason:", data.finishReason);
-    }
-
-    return isBadAiText(text) ? null : text;
+    return data?.text?.trim() || null;
   } catch (e) {
     if (e?.name === "AbortError") {
       console.warn(`Archetype AI request timed out (${CLIENT_TIMEOUT_MS}ms), using template`);
@@ -185,7 +164,7 @@ export async function generateExplanation(playerData, archetypeResult, similarPl
   if (!prompt) return { text: template, source: "template" };
 
   const aiText = await callLocalLLM(prompt);
-  if (!isBadAiText(aiText)) return { text: aiText, source: "ai" };
+  if (aiText) return { text: aiText, source: "ai" };
 
   return { text: template, source: "template" };
 }

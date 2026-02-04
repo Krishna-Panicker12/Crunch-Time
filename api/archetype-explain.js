@@ -10,8 +10,7 @@ export default async function handler(req, res) {
 
   const apiKey = process.env.GEMINI_API_KEY;
   const model = process.env.GEMINI_MODEL || "gemini-1.5-flash";
-  // 12s is often too aggressive for serverless + model latency (causes partial/aborted outputs).
-  const timeoutMs = Number(process.env.GEMINI_TIMEOUT_MS || 25000);
+  const timeoutMs = Number(process.env.GEMINI_TIMEOUT_MS || 12000);
 
   if (!apiKey) {
     console.error("GEMINI_API_KEY is not set");
@@ -34,9 +33,8 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         generationConfig: {
-          // Lower temperature → fewer weird early stops / fragment outputs.
-          temperature: 0.3,
-          maxOutputTokens: 300,
+          temperature: 0.4,
+          maxOutputTokens: 220,
         },
       }),
     });
@@ -54,15 +52,11 @@ export default async function handler(req, res) {
     }
 
     const data = await r.json();
-    const candidate = data?.candidates?.[0];
     const text =
-      candidate?.content?.parts?.map((p) => p?.text).filter(Boolean).join("")?.trim() || null;
+      data?.candidates?.[0]?.content?.parts?.map((p) => p?.text).filter(Boolean).join("")?.trim() ||
+      null;
 
-    // Return finishReason for debugging (client will ignore in prod UI).
-    return res.status(200).json({
-      text,
-      finishReason: candidate?.finishReason || null,
-    });
+    return res.status(200).json({ text });
   } catch (e) {
     const isAbort = e?.name === "AbortError";
     return res.status(isAbort ? 504 : 500).json({
