@@ -15,7 +15,7 @@ import IND from "../assets/indianapolis-colts-logo-transparent.png";
 import JAX from "../assets/jacksonville-jaguars-logo-transparent.png";
 import KC from "../assets/kansas-city-chiefs-logo-transparent.png";
 import LAC from "../assets/los-angeles-chargers-logo-transparent.png";
-import LAR from "../assets/la-rams-logo-png-transparent.png";
+import LA from "../assets/la-rams-logo-png-transparent.png";
 import MIA from "../assets/miami-dolphins-logo-transparent.png";
 import MIN from "../assets/minnesota-vikings-logo-transparent.png";
 import NE from "../assets/new-england-patriots-logo-transparent.png";
@@ -33,7 +33,7 @@ import WAS from "../assets/Washington-Commanders.png";
 
 export const teamLogoMap = {
   ARI, ATL, BAL, BUF, CAR, CHI, CIN, CLE, DAL, DEN, DET, GB, HOU, IND, JAX, KC,
-  LAC, LAR, MIA, MIN, NE, NO, NYG, NYJ, OAK, PHI, PIT, SF, SEA, TB, TEN, WAS,
+  LAC, LA, MIA, MIN, NE, NO, NYG, NYJ, OAK, PHI, PIT, SF, SEA, TB, TEN, WAS,
 };
 
 export function PlayerCard({ player }) {
